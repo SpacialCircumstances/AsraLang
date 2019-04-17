@@ -6,6 +6,8 @@
 
   <ItemGroup>
     <Compile Include="ParseTree.fs" />
+    <Compile Include="Token.fs" />
+    <Compile Include="Tokenizer.fs" />
   </ItemGroup>
 
 </Project>
