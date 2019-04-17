@@ -16,12 +16,7 @@ type TokenType =
     | Arrow //->
     | Comment
 
-type Position = {
-    line: int
-    column: int
-}
-
 type Token = {
     token: TokenType
-    position: Position
+    position: int
 }
