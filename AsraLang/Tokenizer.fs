@@ -17,7 +17,7 @@ let advance (state: State) = ({ state with current = state.current + 1 }, state.
 
 let skipWhitespace (state: State) =
     let sourceAfterCurrent = Seq.skip state.current state.source
-    let nextNonWs = Seq.findIndex (fun c -> not (Char.IsWhiteSpace c)) sourceAfterCurrent
+    let nextNonWs = Seq.findIndex (fun c -> not (Char.IsWhiteSpace c)) sourceAfterCurrent + state.current
     { state with start = nextNonWs; current = nextNonWs }
 
 let rec nextToken (state: State) =
