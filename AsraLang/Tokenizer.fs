@@ -45,8 +45,14 @@ let skipWhitespace (state: State) =
 let makeToken (state: State) (t: TokenType) = ({ token = t; position = state.start }, state)
 
 let comment (state: State) =
-    let nextLinebreak = findNext state.source state.current (fun c -> c = '\n')
+    let nextLinebreak = findNext state.source state.current (fun c -> c = '\n' || c = char 0)
     { token = Comment; position = state.start }, { state with start = nextLinebreak; current = nextLinebreak }
+
+let stringLiteral (state: State) =
+    let nextQuote = findNext state.source state.current (fun c -> c = '"')
+    let literal = state.source.Substring(state.start, nextQuote)
+    let newState, _ = advance state //Consume quote
+    { token = StringLiteral literal; position = newState.current }, newState
 
 let nextToken (state: State) =
     let state, curr = state |> skipWhitespace |> advance //Get first character after whitespace
@@ -59,6 +65,7 @@ let nextToken (state: State) =
         | false ->
             match curr with
                 | '#' -> comment state
+                | '"' -> stringLiteral state
                 | _ -> ({ token = Comment; position = state.start }, state)
 
 let tokenize (code: string): Token seq =
