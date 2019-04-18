@@ -36,7 +36,14 @@ let peek (state: State) = match hasEnded state with
 
 let findNext (source: string) (start: int) (pred: char -> bool) =
     let afterStart = Seq.skip start source
-    (Seq.findIndex pred afterStart) + start
+    match (Seq.tryFindIndex pred afterStart) with
+        | Some index -> index + start
+        | None -> source.Length //Not found, therefore token must end at source end
+
+let nextChar (source: string) (after: int) =
+    match after + 1 >= source.Length with
+        | true -> char 0
+        | false -> source.[after + 1]
 
 let skipWhitespace (state: State) =
     let nextNonWs = findNext state.source state.current (fun c -> not (Char.IsWhiteSpace c))
@@ -55,7 +62,16 @@ let stringLiteral (state: State) =
     { token = StringLiteral literal; position = newState.current }, newState
 
 let numberLiteral (state: State) =
-    raise(NotImplementedException())
+    let nextNonDigit = findNext state.source state.current (fun c -> not (Char.IsNumber c))
+    let afterThat = nextChar state.source nextNonDigit
+    let tt, final = if Char.IsNumber afterThat && state.source.[nextNonDigit] = '.' then
+                        let stop = findNext state.source (nextNonDigit + 1) (fun c -> not (Char.IsNumber c))
+                        let literal = state.source.Substring(state.start, stop - state.start)
+                        FloatLiteral (Double.Parse literal), stop
+                    else
+                        let literal = state.source.Substring(state.start, nextNonDigit - state.start)
+                        IntLiteral (Int64.Parse literal), nextNonDigit
+    { token = tt; position = state.start }, { state with start = final; current = final }
 
 let identifier (state: State) =
     let stop = findNext state.source state.current Char.IsWhiteSpace
