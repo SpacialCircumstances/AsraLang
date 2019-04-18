@@ -60,7 +60,10 @@ let numberLiteral (state: State) =
 let identifier (state: State) =
     let stop = findNext state.source state.current Char.IsWhiteSpace
     let literal = state.source.Substring(state.start, stop - state.start)
-    { token = Identifier literal; position = state.start }, { state with start = stop; current = stop }
+    let tt = match keywords.ContainsKey literal with
+                | true -> keywords.Item literal
+                | false -> Identifier literal
+    { token = tt; position = state.start }, { state with start = stop; current = stop }
 
 let nextToken (state: State) =
     let state, curr = state |> skipWhitespace |> advance //Get first character after whitespace
