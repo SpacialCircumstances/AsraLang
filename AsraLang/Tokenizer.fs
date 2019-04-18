@@ -54,6 +54,14 @@ let stringLiteral (state: State) =
     let newState, _ = advance state //Consume quote
     { token = StringLiteral literal; position = newState.current }, newState
 
+let numberLiteral (state: State) =
+    raise(NotImplementedException())
+
+let identifier (state: State) =
+    let stop = findNext state.source state.current Char.IsWhiteSpace
+    let literal = state.source.Substring(state.start, stop)
+    { token = Identifier literal; position = state.start }, { state with start = state.current + stop; current = state.current + stop }
+
 let nextToken (state: State) =
     let state, curr = state |> skipWhitespace |> advance //Get first character after whitespace
     let nextChar = peek state
@@ -66,7 +74,11 @@ let nextToken (state: State) =
             match curr with
                 | '#' -> comment state
                 | '"' -> stringLiteral state
-                | _ -> ({ token = Comment; position = state.start }, state)
+                | _ -> 
+                    if Char.IsNumber curr then
+                        numberLiteral state
+                    else
+                        identifier state
 
 let tokenize (code: string): Token seq =
     let init = {
