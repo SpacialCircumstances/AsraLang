@@ -57,3 +57,21 @@ let ``String literals`` () =
         StringLiteral "123"
     ]
     Assert.True (tokensMatch expected tokens)
+
+[<Fact>]
+let ``Identifiers`` () =
+    let input = "abc ++ (test) (vvb == %)"
+    let tokens = tokenize input
+    let expected = [
+        Identifier "abc"
+        Identifier "++"
+        LeftParen
+        Identifier "test"
+        RightParen
+        LeftParen
+        Identifier "vvb"
+        Identifier "=="
+        Identifier "%"
+        RightParen
+    ]
+    Assert.True (tokensMatch expected tokens)
