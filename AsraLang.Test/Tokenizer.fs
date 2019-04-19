@@ -13,13 +13,13 @@ let tokensMatch (expected: TokenType seq) (got: Token seq) =
 
 [<Fact>]
 let ``Single char tokens`` () =
-    let input = ". : () [ ][] - > + / *"
+    let input = ". : ( ) [ ] - > + / *"
     let tokens = tokenize input
     let expected = [
         Dot
         Colon
-        BlockOpen
-        BlockClose
+        LeftParen
+        RightParen
         BlockOpen
         BlockClose
         Identifier "-"

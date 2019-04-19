@@ -24,6 +24,14 @@ let singleCharTokens = dict [
 
 let keywords = dict [
     "->", Arrow
+    ".", Dot
+    ",", Comma
+    "=", Equal
+    ":", Colon
+    "[", BlockOpen
+    "]", BlockClose
+    "(", LeftParen
+    ")", RightParen
 ]
 
 let hasEnded (state: State) = state.current >= state.source.Length
@@ -84,20 +92,14 @@ let identifier (state: State) =
 let nextToken (state: State) =
     let state, curr = state |> skipWhitespace |> advance //Get first character after whitespace
     let nextChar = peek state
-    match Char.IsWhiteSpace nextChar || hasEnded state with
-        | true -> //Single char token
-            match singleCharTokens.ContainsKey curr with
-                | true -> makeToken state (singleCharTokens.Item curr)
-                | false -> makeToken state (Identifier (string curr))
-        | false ->
-            match curr with
-                | '#' -> comment state
-                | '"' -> stringLiteral state
-                | _ -> 
-                    if Char.IsNumber curr then
-                        numberLiteral state
-                    else
-                        identifier state
+    match curr with
+        | '#' -> comment state
+        | '"' -> stringLiteral state
+        | _ -> 
+            if Char.IsNumber curr then
+                numberLiteral state
+            else
+                identifier state
 
 let tokenize (code: string): Token seq =
     let init = {
