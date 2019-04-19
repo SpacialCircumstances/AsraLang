@@ -12,17 +12,6 @@ type State = {
     col: int
 }
 
-let singleCharTokens = dict [
-    '.', Dot
-    ',', Comma
-    '=', Equal
-    ':', Colon
-    '[', BlockOpen
-    ']', BlockClose
-    '(', LeftParen
-    ')', RightParen
-]
-
 let keywords = dict [
     "->", Arrow
     ".", Dot
