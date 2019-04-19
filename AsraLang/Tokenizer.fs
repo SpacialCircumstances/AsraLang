@@ -24,7 +24,7 @@ let keywords = dict [
     ")", RightParen
 ]
 
-let isDelimiter (c: Char) = Char.IsWhiteSpace c || c = '.' || c = ')' || c = ']'
+let isDelimiter (c: Char) = Char.IsWhiteSpace c || c = '.' || c = ')' || c = ']' || c = ','
 
 let hasEnded (state: State) = state.current >= state.source.Length
 
@@ -91,6 +91,7 @@ let nextToken (state: State) =
         | ')' -> makeToken state RightParen
         | '[' -> makeToken state BlockOpen
         | ']' -> makeToken state BlockClose
+        | ',' -> makeToken state Comma
         | _ -> 
             if Char.IsNumber curr then
                 numberLiteral state
