@@ -60,7 +60,7 @@ let ``String literals`` () =
 
 [<Fact>]
 let ``Identifiers`` () =
-    let input = "abc ++ (test) (vvb == %)"
+    let input = "abc ++ (test) (vvb == %) ,asdf. a->b"
     let tokens = tokenize input
     let expected = [
         Identifier "abc"
@@ -73,5 +73,11 @@ let ``Identifiers`` () =
         Identifier "=="
         Identifier "%"
         RightParen
+        Comma
+        Identifier "asdf"
+        Dot
+        Identifier "a"
+        Arrow
+        Identifier "b"
     ]
     Assert.True (tokensMatch expected tokens)
