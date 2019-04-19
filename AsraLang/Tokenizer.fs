@@ -2,6 +2,7 @@
 
 open Token
 open System
+open System.Globalization
 
 type State = {
     source: string
@@ -75,7 +76,7 @@ let numberLiteral (state: State) =
     let tt, final = if Char.IsNumber afterThat && state.source.[nextNonDigit] = '.' then
                         let stop = findNext state.source (nextNonDigit + 1) (fun c -> not (Char.IsNumber c))
                         let literal = state.source.Substring(state.start, stop - state.start)
-                        FloatLiteral (Double.Parse literal), stop
+                        FloatLiteral (Double.Parse (literal, CultureInfo.InvariantCulture)), stop
                     else
                         let literal = state.source.Substring(state.start, nextNonDigit - state.start)
                         IntLiteral (Int64.Parse literal), nextNonDigit

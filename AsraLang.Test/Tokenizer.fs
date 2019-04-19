@@ -32,13 +32,14 @@ let ``Single char tokens`` () =
 
 [<Fact>]
 let ``Number literals`` () =
-    let input = "123 1 2.4 29.0 7777 12."
+    let input = "123 1 2.4 29.0 658.34 7777 12."
     let tokens = tokenize input
     let expected = [
         IntLiteral 123L
         IntLiteral 1L
         FloatLiteral 2.4 
         FloatLiteral 29.0
+        FloatLiteral 658.34
         IntLiteral 7777L
         IntLiteral 12L
         Dot
