@@ -87,6 +87,10 @@ let nextToken (state: State) =
     match curr with
         | '#' -> comment state
         | '"' -> stringLiteral state
+        | '(' -> makeToken state LeftParen
+        | ')' -> makeToken state RightParen
+        | '[' -> makeToken state BlockOpen
+        | ']' -> makeToken state BlockClose
         | _ -> 
             if Char.IsNumber curr then
                 numberLiteral state
