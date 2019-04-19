@@ -24,6 +24,8 @@ let keywords = dict [
     ")", RightParen
 ]
 
+let isDelimiter (c: Char) = Char.IsWhiteSpace c || c = '.' || c = ')' || c = ']'
+
 let hasEnded (state: State) = state.current >= state.source.Length
 
 let advance (state: State) = ({ state with current = state.current + 1 }, state.source.[state.current])
@@ -72,7 +74,7 @@ let numberLiteral (state: State) =
     { token = tt; position = state.start }, { state with start = final; current = final }
 
 let identifier (state: State) =
-    let stop = findNext state.source state.current Char.IsWhiteSpace
+    let stop = findNext state.source state.current isDelimiter
     let literal = state.source.Substring(state.start, stop - state.start)
     let tt = match keywords.ContainsKey literal with
                 | true -> keywords.Item literal
