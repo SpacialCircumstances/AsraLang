@@ -45,3 +45,15 @@ let ``Number literals`` () =
         Dot
     ]
     Assert.True (tokensMatch expected tokens)
+
+[<Fact>]
+let ``String literals`` () =
+    let input = """ Test "Test" "" "123" """
+    let tokens = tokenize input
+    let expected = [
+        Identifier "Test"
+        StringLiteral "Test"
+        StringLiteral ""
+        StringLiteral "123"
+    ]
+    Assert.True (tokensMatch expected tokens)
