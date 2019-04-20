@@ -119,5 +119,5 @@ let tokenize (code: string): Token seq =
         match hasEnded skipped with
             | true -> None
             | false -> Some (nextToken skipped)
-    ) init
+    ) init |> Seq.cache
     
