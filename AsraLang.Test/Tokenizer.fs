@@ -85,3 +85,35 @@ let ``Identifiers`` () =
         Identifier "b"
     ]
     Assert.True (tokensMatch expected tokens)
+
+[<Fact>]
+let ``Hello world`` () =
+    let input = """"Hello World" printLn"""
+    let tokens = tokenize input
+    let expected = [
+        StringLiteral "Hello World"
+        Identifier "printLn"
+    ]
+    Assert.True (tokensMatch expected tokens)
+
+[<Fact>]
+let ``Math`` () =
+    let input = "(2 + 2) / ((12.0 / 3.0) toInt)"
+    let tokens = tokenize input
+    let expected = [
+        LeftParen
+        IntLiteral 2L
+        Identifier "+"
+        IntLiteral 2L
+        RightParen
+        Identifier "/"
+        LeftParen
+        LeftParen
+        FloatLiteral 12.0
+        Identifier "/"
+        FloatLiteral 3.0
+        RightParen
+        Identifier "toInt"
+        RightParen
+    ]
+    Assert.True (tokensMatch expected tokens)
