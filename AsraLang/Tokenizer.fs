@@ -24,7 +24,7 @@ let keywords = dict [
     ")", RightParen
 ]
 
-let isDelimiter (c: Char) = Char.IsWhiteSpace c || c = '.' || c = ')' || c = ']' || c = ','
+let isDelimiter (c: Char) = Char.IsWhiteSpace c || c = '.' || c = ')' || c = ']' || c = ',' || c = '-'
 
 let hasEnded (state: State) = state.current >= state.source.Length
 
@@ -83,7 +83,6 @@ let identifier (state: State) =
 
 let nextToken (state: State) =
     let state, curr = state |> skipWhitespace |> advance //Get first character after whitespace
-    let nextChar = peek state
     match curr with
         | '#' -> comment state
         | '"' -> stringLiteral state
@@ -92,6 +91,15 @@ let nextToken (state: State) =
         | '[' -> makeToken state BlockOpen
         | ']' -> makeToken state BlockClose
         | ',' -> makeToken state Comma
+        | '-' ->
+            let newState, nextChar = advance state
+            match nextChar with
+                | '>' -> makeToken newState Arrow
+                | _ ->
+                    if Char.IsNumber nextChar then
+                        numberLiteral newState
+                    else
+                        identifier state
         | _ -> 
             if Char.IsNumber curr then
                 numberLiteral state
