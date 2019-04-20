@@ -57,9 +57,9 @@ let comment (state: State) =
 
 let stringLiteral (state: State) =
     let nextQuote = findNext state.source state.current (fun c -> c = '"')
-    let literal = state.source.Substring(state.start, nextQuote)
-    let newState, _ = advance state //Consume quote
-    { token = StringLiteral literal; position = newState.current }, newState
+    let literal = state.source.Substring(state.current, nextQuote - state.current)
+    let newState = { state with start = nextQuote + 1; current = nextQuote + 1 } //Consume the second quote
+    { token = StringLiteral literal; position = state.current }, newState
 
 let numberLiteral (state: State) =
     let nextNonDigit = findNext state.source state.current (fun c -> not (Char.IsNumber c))
@@ -82,7 +82,7 @@ let identifier (state: State) =
     { token = tt; position = state.start }, { state with start = stop; current = stop }
 
 let nextToken (state: State) =
-    let state, curr = state |> skipWhitespace |> advance //Get first character after whitespace
+    let state, curr = advance state
     match curr with
         | '#' -> comment state
         | '"' -> stringLiteral state
@@ -115,8 +115,9 @@ let tokenize (code: string): Token seq =
         col = 1;
     }
     Seq.unfold (fun state -> 
-        match hasEnded state with
+        let skipped = skipWhitespace state
+        match hasEnded skipped with
             | true -> None
-            | false -> Some (nextToken state)
+            | false -> Some (nextToken skipped)
     ) init
     
