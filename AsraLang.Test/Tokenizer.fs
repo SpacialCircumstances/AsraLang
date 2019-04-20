@@ -32,7 +32,7 @@ let ``Single char tokens`` () =
 
 [<Fact>]
 let ``Number literals`` () =
-    let input = "123 1 2.4 29.0 658.34 7777 12."
+    let input = "123 1 2.4 29.0 658.34 7777 12. -1 -3.0 -4."
     let tokens = tokenize input
     let expected = [
         IntLiteral 123L
@@ -42,6 +42,10 @@ let ``Number literals`` () =
         FloatLiteral 658.34
         IntLiteral 7777L
         IntLiteral 12L
+        Dot
+        IntLiteral -1L
+        FloatLiteral -3.0
+        IntLiteral -4L
         Dot
     ]
     Assert.True (tokensMatch expected tokens)
