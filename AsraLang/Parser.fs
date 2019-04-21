@@ -4,16 +4,14 @@ open Pidgin
 open Token
 open System
 
-let token (f: Token -> bool) = Parser<Token>.Token(Func<Token, bool>(f))
-
-let map (p: Parser<Token, Token>) (f: Token -> 'a) = p.Select(Func<Token, 'a>(f))
-
-let (<!>) = map
+let token (f: Token -> 'a option) = //TODO: Make more efficient, do not run f twice
+    Parser<Token>.Token(Func<Token, bool>(fun t -> match f t with
+                                                        | None -> false
+                                                        | Some _ -> true)).Select(Func<Token, 'a>(fun t -> match f t with
+                                                                                                            | Some a -> a
+                                                                                                            | None -> invalidOp "Expected token"))
 
 let parseStringLiteral = token (fun t ->
                                     match t.token with
-                                        | StringLiteral _ -> true
-                                        | _ -> false) <!> (fun l -> 
-                                            match l.token with
-                                                | StringLiteral s -> ParseTree.StringLiteral s
-                                                | _ -> invalidOp "Error")
+                                        | StringLiteral str -> Some (ParseTree.StringLiteral str)
+                                        | _ -> None)
