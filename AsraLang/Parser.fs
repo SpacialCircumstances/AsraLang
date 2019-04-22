@@ -44,3 +44,9 @@ let parseDot = token (fun t ->
                                 | _ -> None)
 
 let programParser = sepBy parseExpression parseDot
+
+let parse (tokens: Token seq) = 
+    let res = programParser.Parse(tokens)
+    match res.Success with
+        | true -> Ok res.Value
+        | false -> Error res.Error
