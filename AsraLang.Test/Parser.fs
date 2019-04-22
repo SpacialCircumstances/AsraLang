@@ -55,3 +55,17 @@ let ``Parse groups`` () =
         GroupExpression (GroupExpression (LiteralExpression (FloatLiteral 42.6)))
     ]
     isOk parsed (fun result -> Assert.True (astMatch expected result))
+
+[<Fact>]
+let ``Parse variable definitions`` () =
+    let input = """
+    test = 42.
+    foo = "test"
+    """
+    let tokens = Tokenizer.tokenize input
+    let parsed = Parser.parse tokens
+    let expected = [
+        DefineVariableExpression { variableName = Simple "test"; value = (LiteralExpression (IntLiteral 42L)) }
+        DefineVariableExpression { variableName = Simple "foo"; value = (LiteralExpression (StringLiteral "test")) }
+    ]
+    isOk parsed (fun result -> Assert.True (astMatch expected result))

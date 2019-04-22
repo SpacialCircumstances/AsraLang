@@ -19,6 +19,8 @@ let map (parser: Parser<Token, 'a>) (mapper: 'a -> 'b) = parser.Select(Func<'a, 
 
 let (<!>) = map
 
+let map2 (parser1: Parser<Token, 'a>) (parser2: Parser<Token, 'b>) (mapper: 'a -> 'b -> 'c) = Parser.Map(Func<'a, 'b, 'c>(mapper), parser1, parser2)
+
 let sepBy (parser: Parser<Token, 'a>) (sep: Parser<Token, 'b>) = parser.SeparatedAtLeastOnce sep
 
 let prec (p: unit -> Parser<Token, 'a>) = Parser.Rec(Func<Parser<Token, 'a>>(p))
@@ -40,9 +42,11 @@ let parseFloatLiteral = token (fun t ->
 
 let parseLiteralExpression = choice [ parseStringLiteral; parseFloatLiteral; parseIntLiteral ] <!> ParseTree.LiteralExpression
 
-let parseVariableExpression = token (fun t -> match t.token with
-                                                | Identifier i -> Some (ParseTree.VariableExpression i)
+let parseIdentifier = token (fun t -> match t.token with
+                                                | Identifier i -> Some i
                                                 | _ -> None)
+
+let parseVariableExpression = parseIdentifier <!> ParseTree.VariableExpression
 
 let parseLeftParen = token (fun t -> match t.token with
                                         | LeftParen -> Some ()
@@ -54,6 +58,16 @@ let parseRightParen = token (fun t -> match t.token with
 
 let parseGroupExpression = parseLeftParen.Then(prec (fun () -> parseValueExpression)).Before(parseRightParen) <!> ParseTree.GroupExpression
 
+let parseEqual = token (fun t -> match t.token with
+                                        | Equal -> Some ()
+                                        | _ -> None)
+
+let parseSimpleDeclaration = parseIdentifier <!> ParseTree.Simple
+
+let parseDeclaration = parseSimpleDeclaration //TODO: Declaration with type annotation
+
+let parseVariableDefinitionExpression = map2 (parseDeclaration.Before(parseEqual)) (prec (fun () -> parseValueExpression)) (fun d e -> ParseTree.DefineVariableExpression { variableName = d; value = e })
+
 parseValueExpression <- choice [
     parseLiteralExpression
     parseVariableExpression
@@ -61,6 +75,7 @@ parseValueExpression <- choice [
 ]
 
 let parseExpression = choice [ 
+    parseVariableDefinitionExpression
     parseValueExpression
 ]
 
