@@ -17,7 +17,7 @@ let map (parser: Parser<Token, 'a>) (mapper: 'a -> 'b) = parser.Select(Func<'a, 
 
 let (<!>) = map
 
-let many1 (parser: Parser<Token, 'a>) = parser.AtLeastOnce()
+let sepBy (parser: Parser<Token, 'a>) (sep: Parser<Token, 'b>) = parser.SeparatedAtLeastOnce sep
 
 let parseStringLiteral = token (fun t ->
                                     match t.token with
@@ -38,4 +38,9 @@ let parseLiteralExpression = choice [ parseStringLiteral; parseFloatLiteral; par
 
 let parseExpression = choice [ parseLiteralExpression ]
 
-let parseProgram = many1 parseExpression
+let parseDot = token (fun t ->
+                            match t.token with
+                                | Dot -> Some ()
+                                | _ -> None)
+
+let programParser = sepBy parseExpression parseDot
