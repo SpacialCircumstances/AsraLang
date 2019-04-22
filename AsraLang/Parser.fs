@@ -4,6 +4,8 @@ open Pidgin
 open Token
 open System
 
+let mutable parseValueExpression = Unchecked.defaultof<Parser<Token, ParseTree.Expression>>
+
 let token (f: Token -> 'a option) = //TODO: Make more efficient, do not run f twice
     Parser<Token>.Token(Func<Token, bool>(fun t -> match f t with
                                                         | None -> false
@@ -18,6 +20,8 @@ let map (parser: Parser<Token, 'a>) (mapper: 'a -> 'b) = parser.Select(Func<'a, 
 let (<!>) = map
 
 let sepBy (parser: Parser<Token, 'a>) (sep: Parser<Token, 'b>) = parser.SeparatedAtLeastOnce sep
+
+let prec (p: unit -> Parser<Token, 'a>) = Parser.Rec(Func<Parser<Token, 'a>>(p))
 
 let parseStringLiteral = token (fun t ->
                                     match t.token with
@@ -40,9 +44,24 @@ let parseVariableExpression = token (fun t -> match t.token with
                                                 | Identifier i -> Some (ParseTree.VariableExpression i)
                                                 | _ -> None)
 
-let parseExpression = choice [ 
+let parseLeftParen = token (fun t -> match t.token with
+                                        | LeftParen -> Some ()
+                                        | _ -> None)
+
+let parseRightParen = token (fun t -> match t.token with
+                                        | RightParen -> Some ()
+                                        | _ -> None)
+
+let parseGroupExpression = parseLeftParen.Then(prec (fun () -> parseValueExpression)).Before(parseRightParen) <!> ParseTree.GroupExpression
+
+parseValueExpression <- choice [
     parseLiteralExpression
     parseVariableExpression
+    parseGroupExpression
+]
+
+let parseExpression = choice [ 
+    parseValueExpression
 ]
 
 let parseDot = token (fun t ->
