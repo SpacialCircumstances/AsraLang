@@ -29,3 +29,16 @@ let ``Parse literals`` () =
         LiteralExpression (FloatLiteral 123.4)
     ]
     isOk parsed (fun result -> Assert.True (astMatch expected result))
+
+[<Fact>]
+let ``Parse literals and variables`` () =
+    let input = """"test". test. 123. t123"""
+    let tokens = Tokenizer.tokenize input
+    let parsed = Parser.parse tokens
+    let expected = [
+        LiteralExpression (StringLiteral "test")
+        VariableExpression "test"
+        LiteralExpression (IntLiteral 123L)
+        VariableExpression "t123"
+    ]
+    isOk parsed (fun result -> Assert.True (astMatch expected result))

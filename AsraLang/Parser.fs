@@ -36,7 +36,14 @@ let parseFloatLiteral = token (fun t ->
 
 let parseLiteralExpression = choice [ parseStringLiteral; parseFloatLiteral; parseIntLiteral ] <!> ParseTree.LiteralExpression
 
-let parseExpression = choice [ parseLiteralExpression ]
+let parseVariableExpression = token (fun t -> match t.token with
+                                                | Identifier i -> Some (ParseTree.VariableExpression i)
+                                                | _ -> None)
+
+let parseExpression = choice [ 
+    parseLiteralExpression
+    parseVariableExpression
+]
 
 let parseDot = token (fun t ->
                             match t.token with
