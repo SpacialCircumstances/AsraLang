@@ -69,3 +69,29 @@ let ``Parse variable definitions`` () =
         DefineVariableExpression { variableName = Simple "foo"; value = (LiteralExpression (StringLiteral "test")) }
     ]
     isOk parsed (fun result -> Assert.True (astMatch expected result))
+
+[<Fact>]
+let ``Parse block expressions`` () =
+    let input = """
+    testBlock = [
+        "asdf".
+        123.
+        a = 233.
+        [
+            456
+        ]
+    ]
+    """    
+    let tokens = Tokenizer.tokenize input
+    let parsed = Parser.parse tokens
+    let block = BlockExpression { parameters = None; body = [
+        LiteralExpression (StringLiteral "asdf")
+        LiteralExpression (IntLiteral 123L)
+        DefineVariableExpression { variableName = Simple "a"; value = LiteralExpression (IntLiteral 233L) }
+        BlockExpression { parameters = None; body = [
+            LiteralExpression (IntLiteral 456L)
+        ]}
+    ]}
+    let expected = [ DefineVariableExpression { variableName = Simple "testBlock"; value = block } ]
+    isOk parsed (fun result -> Assert.True (astMatch expected result))
+    
