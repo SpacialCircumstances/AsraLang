@@ -6,6 +6,8 @@ open System
 
 let mutable parseValueExpression = Unchecked.defaultof<Parser<Token, ParseTree.Expression>>
 
+let mutable parseExpression = Unchecked.defaultof<Parser<Token, ParseTree.Expression>>
+
 let token (f: Token -> 'a option) = //TODO: Make more efficient, do not run f twice
     Parser<Token>.Token(Func<Token, bool>(fun t -> match f t with
                                                         | None -> false
@@ -70,23 +72,37 @@ let parseDeclaration = parseSimpleDeclaration //TODO: Declaration with type anno
 
 let parseVariableDefinitionExpression = Parser.Try (map2 (parseDeclaration.Before(parseEqual)) (prec (fun () -> parseValueExpression)) (fun d e -> ParseTree.DefineVariableExpression { variableName = d; value = e })) |> label "Variable definition"
 
-parseValueExpression <- choice [
-    parseLiteralExpression
-    parseVariableExpression
-    parseGroupExpression
-]
-
-let parseExpression = choice [ 
-    parseVariableDefinitionExpression
-    parseValueExpression
-]
-
 let parseDot = token (fun t ->
                             match t.token with
                                 | Dot -> Some ()
                                 | _ -> None)
 
-let programParser = sepBy parseExpression parseDot
+let parseBlockOpen = token (fun t -> match t.token with
+                                        | BlockOpen -> Some ()
+                                        | _ -> None)
+
+let parseBlockClose = token (fun t -> match t.token with
+                                        | BlockClose -> Some ()
+                                        | _ -> None)
+
+let parseExpressions = sepBy (prec (fun () -> parseExpression)) parseDot
+
+let parseBlock = parseExpressions.Between(parseBlockOpen, parseBlockClose) <!> (fun expressions -> ParseTree.BlockExpression { parameters = None; body = List.ofSeq expressions })
+
+parseValueExpression <- choice [
+    parseLiteralExpression
+    parseVariableExpression
+    parseGroupExpression
+    parseBlock
+]
+
+parseExpression <- choice [ 
+    parseVariableDefinitionExpression
+    parseValueExpression
+]
+
+
+let programParser = parseExpressions
 
 let parse (tokens: Token seq) = 
     let res = programParser.Parse(tokens)
