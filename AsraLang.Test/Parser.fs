@@ -96,4 +96,41 @@ let ``Parse block expressions`` () =
     isOk parsed (fun result -> Assert.True (astMatch expected result))
     
 [<Fact>]
-let ``Parse function calls`` () = ()
+let ``Parse function calls`` () = 
+    let input = """
+    + 2 2.
+    [ test ] [ 324. "asdf" ].
+    (test 23 234.3) 12.1 [ x ]
+    """    
+    let tokens = Tokenizer.tokenize input
+    let parsed = Parser.parse tokens
+    let expected = [ 
+        FunctionCallExpression { func = VariableExpression "+"; arguments = [
+            LiteralExpression (IntLiteral 2L)
+            LiteralExpression (IntLiteral 2L)
+        ]}
+        FunctionCallExpression { func = BlockExpression { parameters = None; body = [
+            VariableExpression "test"
+        ]};
+        arguments = [
+                    BlockExpression { 
+                        parameters = None; 
+                        body = [
+                            LiteralExpression (IntLiteral 324L)
+                            LiteralExpression (StringLiteral "asdf")
+                        ]}   
+        ]}
+        FunctionCallExpression {
+            func = GroupExpression (FunctionCallExpression { 
+            func = VariableExpression "test"; 
+            arguments = [
+                LiteralExpression (IntLiteral 23L)
+                LiteralExpression (FloatLiteral 234.3)
+            ]});
+            arguments = [
+                LiteralExpression (FloatLiteral 12.1)
+                BlockExpression { parameters = None; body = [ VariableExpression "x" ]}
+            
+        ]}
+    ]
+    isOk parsed (fun result -> Assert.True (astMatch expected result))
