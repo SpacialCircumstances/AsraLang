@@ -5,14 +5,15 @@ open ParseTree
 
 let astMatch (expected: Expression seq) (got: Expression seq) =
     if Seq.length expected <> Seq.length got then
-        false
+        Assert.True (false, sprintf "Expected length: %i, but got: %i" (Seq.length expected) (Seq.length got))
     else
-        Seq.zip expected got |> Seq.forall (fun (a, b) -> a = b)
+        Seq.iter2 (fun (e: Expression) (g: Expression) -> Assert.Equal(e, g)) expected got
 
 let isOk (result: Result<'a, 'b>) (f: 'a -> unit) = 
-    Assert.True(match result with
+    let ok = match result with
                     | Ok _ -> true
-                    | Error _ -> false)
+                    | Error _ -> false
+    Assert.True (ok, "Expected: Ok, got: Error")
     match result with
         | Ok a -> f a
         | Error e -> () 
@@ -28,7 +29,7 @@ let ``Parse literals`` () =
         LiteralExpression (StringLiteral "test")
         LiteralExpression (FloatLiteral 123.4)
     ]
-    isOk parsed (fun result -> Assert.True (astMatch expected result))
+    isOk parsed (fun result -> astMatch expected result)
 
 [<Fact>]
 let ``Parse literals and variables`` () =
@@ -41,7 +42,7 @@ let ``Parse literals and variables`` () =
         LiteralExpression (IntLiteral 123L)
         VariableExpression "t123"
     ]
-    isOk parsed (fun result -> Assert.True (astMatch expected result))
+    isOk parsed (fun result -> astMatch expected result)
 
 [<Fact>]
 let ``Parse groups`` () =
@@ -54,7 +55,7 @@ let ``Parse groups`` () =
         GroupExpression (VariableExpression "foo")
         GroupExpression (GroupExpression (LiteralExpression (FloatLiteral 42.6)))
     ]
-    isOk parsed (fun result -> Assert.True (astMatch expected result))
+    isOk parsed (fun result -> astMatch expected result)
 
 [<Fact>]
 let ``Parse variable definitions`` () =
@@ -68,7 +69,7 @@ let ``Parse variable definitions`` () =
         DefineVariableExpression { variableName = Simple "test"; value = (LiteralExpression (IntLiteral 42L)) }
         DefineVariableExpression { variableName = Simple "foo"; value = (LiteralExpression (StringLiteral "test")) }
     ]
-    isOk parsed (fun result -> Assert.True (astMatch expected result))
+    isOk parsed (fun result -> astMatch expected result)
 
 [<Fact>]
 let ``Parse block expressions`` () =
@@ -93,7 +94,7 @@ let ``Parse block expressions`` () =
         ]}
     ]}
     let expected = [ DefineVariableExpression { variableName = Simple "testBlock"; value = block } ]
-    isOk parsed (fun result -> Assert.True (astMatch expected result))
+    isOk parsed (fun result -> astMatch expected result)
     
 [<Fact>]
 let ``Parse function calls`` () = 
@@ -133,4 +134,4 @@ let ``Parse function calls`` () =
             
         ]}
     ]
-    isOk parsed (fun result -> Assert.True (astMatch expected result))
+    isOk parsed (fun result -> astMatch expected result)
