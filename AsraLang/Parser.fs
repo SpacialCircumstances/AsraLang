@@ -95,7 +95,7 @@ let pve = prec (fun () -> parsePrimitiveExpression)
 
 //TODO: Rethink parser order so we do not have to backtrack on fun calls
 
-let parseFunCall = map2 pve (pve.AtLeastOnce()) (fun first exprs -> ParseTree.FunctionCallExpression { func = first; arguments = exprs }) |> Parser.Try
+let parseFunCall = map2 pve (pve.AtLeastOnce()) (fun first exprs -> ParseTree.FunctionCallExpression { func = first; arguments = List.ofSeq exprs }) |> Parser.Try
 
 parsePrimitiveExpression <- choice [
     parseLiteralExpression

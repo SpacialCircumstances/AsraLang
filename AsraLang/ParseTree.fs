@@ -21,7 +21,7 @@ type VariableDefinition = {
 
 and FunctionCall = {
     func: Expression
-    arguments: Expression seq
+    arguments: Expression list
 }
 
 and Block = {
