@@ -89,6 +89,12 @@ let parseExpressions = sepBy (prec (fun () -> parseExpression)) parseDot
 
 let parseBlock = parseExpressions.Between(parseBlockOpen, parseBlockClose) <!> (fun expressions -> ParseTree.BlockExpression { parameters = None; body = List.ofSeq expressions })
 
+let pve = prec (fun () -> parseValueExpression)
+
+//TODO: Rethink parser order so we do not have to backtrack on fun calls
+
+let parseFunCall = map2 pve (pve.AtLeastOnce()) (fun first exprs -> ParseTree.FunctionCallExpression { func = first; arguments = exprs }) |> Parser.Try
+
 parseValueExpression <- choice [
     parseLiteralExpression
     parseVariableExpression
@@ -98,6 +104,7 @@ parseValueExpression <- choice [
 
 parseExpression <- choice [ 
     parseVariableDefinitionExpression
+    parseFunCall
     parseValueExpression
 ]
 

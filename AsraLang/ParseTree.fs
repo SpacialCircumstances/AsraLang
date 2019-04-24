@@ -19,10 +19,10 @@ type VariableDefinition = {
     value: Expression
 }
 
-and FunctionCall = 
-    | Unary of string
-    | Binary of string * Expression
-    | Keyword of (string * Expression) list
+and FunctionCall = {
+    func: Expression
+    arguments: Expression seq
+}
 
 and Block = {
     parameters: (Declaration list) option

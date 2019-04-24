@@ -95,3 +95,5 @@ let ``Parse block expressions`` () =
     let expected = [ DefineVariableExpression { variableName = Simple "testBlock"; value = block } ]
     isOk parsed (fun result -> Assert.True (astMatch expected result))
     
+[<Fact>]
+let ``Parse function calls`` () = ()
