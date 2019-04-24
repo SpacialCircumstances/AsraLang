@@ -62,7 +62,7 @@ let parseRightParen = token (fun t -> match t.token with
                                         | RightParen -> Some ()
                                         | _ -> None)
 
-let parseGroupExpression = parseLeftParen.Then(prec (fun () -> parsePrimitiveExpression)).Before(parseRightParen) <!> ParseTree.GroupExpression
+let parseGroupExpression = parseLeftParen.Then(prec (fun () -> parseValueExpression)).Before(parseRightParen) <!> ParseTree.GroupExpression
 
 let parseEqual = token (fun t -> match t.token with
                                         | Equal -> Some ()
@@ -104,11 +104,13 @@ parsePrimitiveExpression <- choice [
     parseBlock
 ]
 
-parseValueExpression <- parsePrimitiveExpression
+parseValueExpression <- choice [
+    parseFunCall
+    parsePrimitiveExpression
+]
 
 parseExpression <- choice [ 
     parseVariableDefinitionExpression
-    parseFunCall
     parseValueExpression
 ]
 
