@@ -8,6 +8,8 @@ let mutable parseValueExpression = Unchecked.defaultof<Parser<Token, ParseTree.E
 
 let mutable parseExpression = Unchecked.defaultof<Parser<Token, ParseTree.Expression>>
 
+let mutable parsePrimitiveExpression = Unchecked.defaultof<Parser<Token, ParseTree.Expression>>
+
 let token (f: Token -> 'a option) = //TODO: Make more efficient, do not run f twice
     Parser<Token>.Token(Func<Token, bool>(fun t -> match f t with
                                                         | None -> false
@@ -60,7 +62,7 @@ let parseRightParen = token (fun t -> match t.token with
                                         | RightParen -> Some ()
                                         | _ -> None)
 
-let parseGroupExpression = parseLeftParen.Then(prec (fun () -> parseValueExpression)).Before(parseRightParen) <!> ParseTree.GroupExpression
+let parseGroupExpression = parseLeftParen.Then(prec (fun () -> parsePrimitiveExpression)).Before(parseRightParen) <!> ParseTree.GroupExpression
 
 let parseEqual = token (fun t -> match t.token with
                                         | Equal -> Some ()
@@ -70,7 +72,7 @@ let parseSimpleDeclaration = parseIdentifier <!> ParseTree.Simple
 
 let parseDeclaration = parseSimpleDeclaration //TODO: Declaration with type annotation
 
-let parseVariableDefinitionExpression = Parser.Try (map2 (parseDeclaration.Before(parseEqual)) (prec (fun () -> parseValueExpression)) (fun d e -> ParseTree.DefineVariableExpression { variableName = d; value = e })) |> label "Variable definition"
+let parseVariableDefinitionExpression = Parser.Try (map2 (parseDeclaration.Before(parseEqual)) (prec (fun () -> parsePrimitiveExpression)) (fun d e -> ParseTree.DefineVariableExpression { variableName = d; value = e })) |> label "Variable definition"
 
 let parseDot = token (fun t ->
                             match t.token with
@@ -89,18 +91,20 @@ let parseExpressions = sepBy (prec (fun () -> parseExpression)) parseDot
 
 let parseBlock = parseExpressions.Between(parseBlockOpen, parseBlockClose) <!> (fun expressions -> ParseTree.BlockExpression { parameters = None; body = List.ofSeq expressions })
 
-let pve = prec (fun () -> parseValueExpression)
+let pve = prec (fun () -> parsePrimitiveExpression)
 
 //TODO: Rethink parser order so we do not have to backtrack on fun calls
 
 let parseFunCall = map2 pve (pve.AtLeastOnce()) (fun first exprs -> ParseTree.FunctionCallExpression { func = first; arguments = exprs }) |> Parser.Try
 
-parseValueExpression <- choice [
+parsePrimitiveExpression <- choice [
     parseLiteralExpression
     parseVariableExpression
     parseGroupExpression
     parseBlock
 ]
+
+parseValueExpression <- parsePrimitiveExpression
 
 parseExpression <- choice [ 
     parseVariableDefinitionExpression
