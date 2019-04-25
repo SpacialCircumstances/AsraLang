@@ -78,7 +78,7 @@ let parseType = parseIdentifier //TODO: Support generics, complex types...
 
 let parseAnnotatedDeclaration = map2 (parseIdentifier.Before parseColon) parseType (fun name tp -> ParseTree.Annotated { varName = name; typeName = tp }) |> Parser.Try
 
-let parseDeclaration = parseAnnotatedDeclaration.Or parseSimpleDeclaration //TODO: Declaration with type annotation
+let parseDeclaration = parseAnnotatedDeclaration.Or parseSimpleDeclaration |> label "Variable declaration" //TODO: Declaration with type annotation
 
 let parseVariableDefinitionExpression = Parser.Try (map2 (parseDeclaration.Before(parseEqual)) (prec (fun () -> parsePrimitiveExpression)) (fun d e -> ParseTree.DefineVariableExpression { variableName = d; value = e })) |> label "Variable definition"
 
@@ -115,13 +115,13 @@ let parseBlockContent = map2 parseBlockParameters parseExpressions (fun paramete
                     | false -> None
     ParseTree.BlockExpression { parameters = prms; body = List.ofSeq expressions })
 
-let parseBlock = parseBlockContent.Between (parseBlockOpen, parseBlockClose)
+let parseBlock = parseBlockContent.Between (parseBlockOpen, parseBlockClose) |> label "Block"
 
 let pve = prec (fun () -> parsePrimitiveExpression)
 
 //TODO: Rethink parser order so we do not have to backtrack on fun calls
 
-let parseFunCall = map2 pve (pve.AtLeastOnce()) (fun first exprs -> ParseTree.FunctionCallExpression { func = first; arguments = List.ofSeq exprs }) |> Parser.Try
+let parseFunCall = map2 pve (pve.AtLeastOnce()) (fun first exprs -> ParseTree.FunctionCallExpression { func = first; arguments = List.ofSeq exprs }) |> Parser.Try |> label "Function call"
 
 parsePrimitiveExpression <- choice [
     parseBlock
