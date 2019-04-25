@@ -107,15 +107,15 @@ let parseBlockClose = token (fun t -> match t.token with
 
 let parseExpressions = sepBy (prec (fun () -> parseExpression)) parseDot
 
-let parseBlockParameters = (sepBy parseDeclaration parseComma).Before(parseArrow).Optional() |> Parser.Try
+let parseBlockParameters = (sepBy parseDeclaration parseComma).Before(parseArrow).Optional()
 
 let parseBlockContent = map2 parseBlockParameters parseExpressions (fun parameters expressions -> 
     let prms = match parameters.HasValue with
                     | true -> Some (List.ofSeq parameters.Value)
                     | false -> None
-    ParseTree.BlockExpression { parameters = prms; body = List.ofSeq expressions }) |> Parser.Try
+    ParseTree.BlockExpression { parameters = prms; body = List.ofSeq expressions })
 
-let parseBlock = parseBlockContent.Between (parseBlockOpen, parseBlockClose) |> Parser.Try
+let parseBlock = parseBlockContent.Between (parseBlockOpen, parseBlockClose)
 
 let pve = prec (fun () -> parsePrimitiveExpression)
 
