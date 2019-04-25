@@ -24,7 +24,7 @@ let keywords = dict [
     ")", RightParen
 ]
 
-let isDelimiter (c: Char) = Char.IsWhiteSpace c || c = '.' || c = ')' || c = ']' || c = ',' || c = '-'
+let isDelimiter (c: Char) = Char.IsWhiteSpace c || c = '.' || c = ')' || c = ']' || c = ',' || c = '-' || c = ':'
 
 let hasEnded (state: State) = state.current >= state.source.Length
 
