@@ -5,7 +5,7 @@ type Literal =
     | IntLiteral of int64
     | FloatLiteral of float
 
-type TypeAnnotated = {
+type TypeAnnotated = { //TODO: Support complex types
     typeName: string
     varName: string
 }

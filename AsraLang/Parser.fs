@@ -70,7 +70,15 @@ let parseEqual = token (fun t -> match t.token with
 
 let parseSimpleDeclaration = parseIdentifier <!> ParseTree.Simple
 
-let parseDeclaration = parseSimpleDeclaration //TODO: Declaration with type annotation
+let parseColon = token (fun t -> match t.token with
+                                        | Colon -> Some ()
+                                        | _ -> None)
+
+let parseType = parseIdentifier //TODO: Support generics, complex types...
+
+let parseAnnotatedDeclaration = map2 (parseIdentifier.Before parseColon) parseType (fun name tp -> ParseTree.Annotated { varName = name; typeName = tp }) |> Parser.Try
+
+let parseDeclaration = parseAnnotatedDeclaration.Or parseSimpleDeclaration //TODO: Declaration with type annotation
 
 let parseVariableDefinitionExpression = Parser.Try (map2 (parseDeclaration.Before(parseEqual)) (prec (fun () -> parsePrimitiveExpression)) (fun d e -> ParseTree.DefineVariableExpression { variableName = d; value = e })) |> label "Variable definition"
 
