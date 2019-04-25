@@ -87,6 +87,16 @@ let parseDot = token (fun t ->
                                 | Dot -> Some ()
                                 | _ -> None)
 
+let parseComma = token (fun t ->
+                            match t.token with
+                                | Comma -> Some ()
+                                | _ -> None)
+
+let parseArrow = token (fun t ->
+                            match t.token with
+                                | Arrow -> Some ()
+                                | _ -> None)
+
 let parseBlockOpen = token (fun t -> match t.token with
                                         | BlockOpen -> Some ()
                                         | _ -> None)
@@ -97,7 +107,15 @@ let parseBlockClose = token (fun t -> match t.token with
 
 let parseExpressions = sepBy (prec (fun () -> parseExpression)) parseDot
 
-let parseBlock = parseExpressions.Between(parseBlockOpen, parseBlockClose) <!> (fun expressions -> ParseTree.BlockExpression { parameters = None; body = List.ofSeq expressions })
+let parseBlockParameters = (sepBy parseDeclaration parseComma).Before(parseArrow).Optional() |> Parser.Try
+
+let parseBlockContent = map2 parseBlockParameters parseExpressions (fun parameters expressions -> 
+    let prms = match parameters.HasValue with
+                    | true -> Some (List.ofSeq parameters.Value)
+                    | false -> None
+    ParseTree.BlockExpression { parameters = prms; body = List.ofSeq expressions }) |> Parser.Try
+
+let parseBlock = parseBlockContent.Between (parseBlockOpen, parseBlockClose) |> Parser.Try
 
 let pve = prec (fun () -> parsePrimitiveExpression)
 
@@ -106,10 +124,10 @@ let pve = prec (fun () -> parsePrimitiveExpression)
 let parseFunCall = map2 pve (pve.AtLeastOnce()) (fun first exprs -> ParseTree.FunctionCallExpression { func = first; arguments = List.ofSeq exprs }) |> Parser.Try
 
 parsePrimitiveExpression <- choice [
+    parseBlock
     parseLiteralExpression
     parseVariableExpression
     parseGroupExpression
-    parseBlock
 ]
 
 parseValueExpression <- choice [
