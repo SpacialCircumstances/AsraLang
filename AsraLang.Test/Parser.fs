@@ -135,3 +135,29 @@ let ``Parse function calls`` () =
         ]}
     ]
     isOk parsed (fun result -> astMatch expected result)
+
+[<Fact>]
+let ``Type annotated declarations`` () =
+    let input = """
+    t1: int = 3.
+    t2: string = "test".
+    t5: Foo = 42.2
+    """    
+    let tokens = Tokenizer.tokenize input
+    let parsed = Parser.parse tokens
+    let expected = [ 
+        DefineVariableExpression { 
+            variableName = Annotated { varName = "t1"; typeName = "int" };
+            value = LiteralExpression (IntLiteral 3L)
+        }
+        DefineVariableExpression {
+            variableName = Annotated { varName = "t2"; typeName = "string" };
+            value = LiteralExpression (StringLiteral "test")
+        }
+        DefineVariableExpression {
+            variableName = Annotated { varName = "t5"; typeName = "Foo" };
+            value = LiteralExpression (FloatLiteral 42.2)
+        }
+    ]
+    isOk parsed (fun result -> astMatch expected result)
+
