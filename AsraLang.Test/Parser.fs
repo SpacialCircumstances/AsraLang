@@ -162,39 +162,18 @@ let ``Type annotated declarations`` () =
     isOk parsed (fun result -> astMatch expected result)
 
 [<Fact>]
-let ``Blocks with arguments`` () =
-    let input = """
-    x = [ a: int, b: string, c: Foo ->
-        + a b
-    ].
-    [ y -> doNothing ]
-    """    
+let ``Block with identifier`` () =
+    let input = "[ test ]"
     let tokens = Tokenizer.tokenize input
     let parsed = Parser.parse tokens
     let expected = [
-        DefineVariableExpression {
-            variableName = Simple "x";
-            value = BlockExpression {
-                parameters = Some [
-                    Annotated { varName = "a"; typeName = "int" }
-                    Annotated { varName = "b"; typeName = "string" }
-                    Annotated { varName = "c"; typeName = "Foo" }
-                ]
-                body = [
-                    FunctionCallExpression { func = VariableExpression "+"; arguments = [
-                        VariableExpression "a"
-                        VariableExpression "b"
-                    ]}
-                ]
-            }
-        }
         BlockExpression {
-            parameters = Some [
-                Simple "y"
-            ]
+            parameters = None
             body = [
-                VariableExpression "doNothing"
+                VariableExpression "test"
             ]
         }
     ]
     isOk parsed (fun result -> astMatch expected result)
+
+    
