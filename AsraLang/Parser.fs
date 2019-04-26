@@ -107,8 +107,8 @@ let parseBlockClose = token (fun t -> match t.token with
 
 let parseExpressions = (prec (fun () -> parseExpression)).Separated parseDot
 
-let parseBlockParameters = ((parseDeclaration.Separated parseComma).
-                                Before(parseArrow)).Optional() 
+let parseBlockParameters = (Parser.Try ((parseDeclaration.Separated parseComma).
+                                Before(parseArrow))).Optional() 
                                 <!> (fun parameters -> match parameters.HasValue with
                                                           | true -> Some (List.ofSeq parameters.Value)
                                                           | false -> None)
