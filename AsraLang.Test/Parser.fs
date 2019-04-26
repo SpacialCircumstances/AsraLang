@@ -21,7 +21,7 @@ let isOk (result: Result<'a, 'b>) (f: 'a -> unit) =
 [<Fact>]
 let ``Parse literals`` () =
     let input = """12. 234.5. "test". 123.4"""
-    let tokens = Tokenizer.tokenize input
+    let tokens = Tokenizer.tokenizer input
     let parsed = Parser.parse tokens
     let expected = [
         LiteralExpression (IntLiteral 12L)
@@ -34,7 +34,7 @@ let ``Parse literals`` () =
 [<Fact>]
 let ``Parse literals and variables`` () =
     let input = """"test". test. 123. t123"""
-    let tokens = Tokenizer.tokenize input
+    let tokens = Tokenizer.tokenizer input
     let parsed = Parser.parse tokens
     let expected = [
         LiteralExpression (StringLiteral "test")
@@ -47,7 +47,7 @@ let ``Parse literals and variables`` () =
 [<Fact>]
 let ``Parse groups`` () =
     let input = """(123). ("test"). (foo). ((42.6))"""
-    let tokens = Tokenizer.tokenize input
+    let tokens = Tokenizer.tokenizer input
     let parsed = Parser.parse tokens
     let expected = [
         GroupExpression (LiteralExpression (IntLiteral 123L))
@@ -63,7 +63,7 @@ let ``Parse variable definitions`` () =
     test = 42.
     foo = "test"
     """
-    let tokens = Tokenizer.tokenize input
+    let tokens = Tokenizer.tokenizer input
     let parsed = Parser.parse tokens
     let expected = [
         DefineVariableExpression { variableName = Simple "test"; value = (LiteralExpression (IntLiteral 42L)) }
@@ -83,7 +83,7 @@ let ``Parse block expressions`` () =
         ]
     ]
     """    
-    let tokens = Tokenizer.tokenize input
+    let tokens = Tokenizer.tokenizer input
     let parsed = Parser.parse tokens
     let block = BlockExpression { parameters = None; body = [
         LiteralExpression (StringLiteral "asdf")
@@ -103,7 +103,7 @@ let ``Parse function calls`` () =
     [ test ] [ 324. "asdf" ].
     (test 23 234.3) 12.1 [ x ]
     """    
-    let tokens = Tokenizer.tokenize input
+    let tokens = Tokenizer.tokenizer input
     let parsed = Parser.parse tokens
     let expected = [ 
         FunctionCallExpression { func = VariableExpression "+"; arguments = [
@@ -143,7 +143,7 @@ let ``Type annotated declarations`` () =
     t2: string = "test".
     t5: Foo = 42.2
     """    
-    let tokens = Tokenizer.tokenize input
+    let tokens = Tokenizer.tokenizer input
     let parsed = Parser.parse tokens
     let expected = [ 
         DefineVariableExpression { 
@@ -164,7 +164,7 @@ let ``Type annotated declarations`` () =
 [<Fact>]
 let ``Block with identifier`` () =
     let input = "[ test ]"
-    let tokens = Tokenizer.tokenize input
+    let tokens = Tokenizer.tokenizer input
     let parsed = Parser.parse tokens
     let expected = [
         BlockExpression {

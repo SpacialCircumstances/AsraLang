@@ -104,7 +104,7 @@ let nextToken (state: State) =
             else
                 identifier state
 
-let tokenize (code: string): Token seq =
+let private tokenize (code: string): Token seq =
     let init = {
         source = code;
         start = 0;
@@ -115,5 +115,13 @@ let tokenize (code: string): Token seq =
         match hasEnded skipped with
             | true -> None
             | false -> Some (nextToken skipped)
-    ) init |> Seq.cache
+    ) init
+
+let stripComments (tokens: Token seq) =
+    Seq.filter (fun t -> match t.token with
+                            | Comment -> false
+                            | _ -> true) tokens
     
+let debugTokenizer = fun s -> tokenize s |> Seq.cache
+
+let tokenizer = fun s -> tokenize s |> stripComments |> Seq.cache
