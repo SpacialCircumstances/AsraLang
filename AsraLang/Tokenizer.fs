@@ -8,8 +8,6 @@ type State = {
     source: string
     start: int
     current: int
-    line: int
-    col: int
 }
 
 let keywords = dict [
@@ -111,8 +109,6 @@ let tokenize (code: string): Token seq =
         source = code;
         start = 0;
         current = 0;
-        line = 1;
-        col = 1;
     }
     Seq.unfold (fun state -> 
         let skipped = skipWhitespace state
