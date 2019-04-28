@@ -118,3 +118,37 @@ let ``Multiline with comments`` () =
         Comment
     ]
     Assert.True (tokensMatch expected tokens)
+
+[<Fact>]
+let ``Code with blocks`` () =
+    let input = """
+    z = [ Int a, String b, foo c ->
+        x = + a b.
+        * x -2
+    ]
+    """
+    let tokens = debugTokenizer input
+    let expected = [
+        Identifier "z"
+        BlockOpen
+        Identifier "Int"
+        Identifier "a"
+        Comma
+        Identifier "String"
+        Identifier "b"
+        Comma
+        Identifier "foo"
+        Identifier "c"
+        Arrow
+        Identifier "x"
+        Equal
+        Identifier "+"
+        Identifier "a"
+        Identifier "b"
+        Dot
+        Identifier "*"
+        Identifier "x"
+        IntLiteral -2L
+        BlockClose
+    ]
+    Assert.True (tokensMatch expected tokens)
