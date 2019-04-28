@@ -18,5 +18,6 @@ type TokenType =
 
 type Token = {
     token: TokenType
-    position: int
+    col: int
+    line: int
 }
