@@ -5,9 +5,9 @@ open System
 open System.Globalization
 
 type State = {
-    start: int
     line: int
     col: int
+    comment: bool
 }
 
 let keywords = dict [
@@ -23,8 +23,6 @@ let keywords = dict [
 ]
 
 let isDelimiter (c: Char) = Char.IsWhiteSpace c || c = '.' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':'
-
-let hasEnded (code: string) (state: State) = state.start >= code.Length
 
 let findNext (source: string) (start: int) (pred: char -> bool) =
     let afterStart = Seq.skip start source
@@ -45,16 +43,25 @@ let split (code: string) =
                 let lexeme = code.Substring (start, next - start)
                 Some (lexeme, next)) 0
 
+let lexemeToToken (state: State) (lexeme: string): (Token option * State) =
+    match lexeme with
+        | "\n" -> (None, { state with col = 1; line = state.line + 1})
+        | " " -> (None, { state with col = state.col + 1 })
+        | _ ->
+            let token = if keywords.ContainsKey lexeme then
+                            token (keywords.[lexeme]) state.col state.line |> Some
+                        else
+                            None
+            (token, { state with col = state.col + lexeme.Length })
+
 let mapToTokens (delimited: string seq) =
-    delimited 
-            |> Seq.map (fun lexeme -> 
-                if keywords.ContainsKey lexeme then
-                    let t = keywords.[lexeme]
-                    Some (token t 0 0)
-                else
-                    None
-            )
-            |> Seq.choose id
+    let init = {
+        line = 1
+        col = 1
+        comment = false
+    }
+    let tokens, _ = Seq.mapFold lexemeToToken init delimited
+    Seq.choose id tokens
 
 let private tokenize (code: string): Token seq =
     let tokens = code 
