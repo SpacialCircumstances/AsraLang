@@ -49,14 +49,27 @@ let lexemeToToken (state: State) (lexeme: string): (Token option * State) =
         | " " -> (None, { state with col = state.col + 1 })
         | "#" -> (None, { state with col = state.col + 1; comment = true })
         | _ ->
-            let token = 
+            let tokenType = 
                 if state.comment then
                     None
                 else
                     if keywords.ContainsKey lexeme then
-                            token (keywords.[lexeme]) state.col state.line |> Some
+                            keywords.[lexeme] |> Some
                         else
-                            None
+                            if lexeme.StartsWith "\"" && lexeme.EndsWith "\"" then
+                                StringLiteral (lexeme.Substring (1, lexeme.Length - 2)) |> Some
+                            else if Char.IsNumber lexeme.[0] then
+                                if lexeme.Contains "." then
+                                    let fl = Double.Parse (lexeme, CultureInfo.InvariantCulture)
+                                    Some (FloatLiteral fl)
+                                else
+                                    let i = Int64.Parse (lexeme, CultureInfo.InvariantCulture)
+                                    Some (IntLiteral i)
+                            else
+                                Some (Identifier lexeme)
+            let token = match tokenType with
+                            | Some tt -> Some (token tt state.col state.line)
+                            | None -> None
             (token, { state with col = state.col + lexeme.Length })
 
 let mapToTokens (delimited: string seq) =
