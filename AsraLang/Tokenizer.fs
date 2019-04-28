@@ -47,7 +47,13 @@ let split (code: string) =
 
 let mapToTokens (delimited: string seq) =
     delimited 
-            |> Seq.map (fun lexeme -> None)
+            |> Seq.map (fun lexeme -> 
+                if keywords.ContainsKey lexeme then
+                    let t = keywords.[lexeme]
+                    Some (token t 0 0)
+                else
+                    None
+            )
             |> Seq.choose id
 
 let private tokenize (code: string): Token seq =

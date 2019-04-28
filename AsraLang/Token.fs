@@ -21,3 +21,5 @@ type Token = {
     col: int
     line: int
 }
+
+let token (t: TokenType) (c: int) (l: int) = { token = t; col = c; line = l }
