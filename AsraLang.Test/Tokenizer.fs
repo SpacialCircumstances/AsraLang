@@ -99,7 +99,7 @@ let ``Comments`` () =
 [<Fact>]
 let ``Multiline with comments`` () =
     let input = """
-    test 2 + 2. # comment here
+    test 2 + 2. #comment here
     foo bar 42
     asdf #test
     """
