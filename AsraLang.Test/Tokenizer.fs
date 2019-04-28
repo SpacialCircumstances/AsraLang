@@ -87,39 +87,6 @@ let ``Identifiers`` () =
     Assert.True (tokensMatch expected tokens)
 
 [<Fact>]
-let ``Comments`` () =
-    let input = "test # foo bar."
-    let tokens = debugTokenizer input
-    let expected = [
-        Identifier "test"
-        Comment
-    ]
-    Assert.True (tokensMatch expected tokens)
-
-[<Fact>]
-let ``Multiline with comments`` () =
-    let input = """
-    test 2 + 2. #comment here
-    foo bar 42
-    asdf #test
-    """
-    let tokens = debugTokenizer input
-    let expected = [
-        Identifier "test"
-        IntLiteral 2L
-        Identifier "+"
-        IntLiteral 2L
-        Dot
-        Comment
-        Identifier "foo"
-        Identifier "bar"
-        IntLiteral 42L
-        Identifier "asdf"
-        Comment
-    ]
-    Assert.True (tokensMatch expected tokens)
-
-[<Fact>]
 let ``Code with blocks`` () =
     let input = """
     z = [ Int a, String b, foo c ->

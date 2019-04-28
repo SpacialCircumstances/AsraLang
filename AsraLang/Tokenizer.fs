@@ -22,7 +22,7 @@ let keywords = dict [
     ")", RightParen
 ]
 
-let isDelimiter (c: Char) = Char.IsWhiteSpace c || c = '.' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':'
+let isDelimiter (c: Char) = Char.IsWhiteSpace c || c = '.' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':' || c = '#'
 
 let findNext (source: string) (start: int) (pred: char -> bool) =
     let afterStart = Seq.skip start source
@@ -47,6 +47,7 @@ let lexemeToToken (state: State) (lexeme: string): (Token option * State) =
     match lexeme with
         | "\n" -> (None, { state with col = 1; line = state.line + 1; comment = false })
         | " " -> (None, { state with col = state.col + 1 })
+        | "#" -> (None, { state with col = state.col + 1; comment = true })
         | _ ->
             let token = 
                 if state.comment then
@@ -72,12 +73,7 @@ let private tokenize (code: string): Token seq =
                     |> split
                     |> mapToTokens
     Seq.empty
-
-let stripComments (tokens: Token seq) =
-    Seq.filter (fun t -> match t.token with
-                            | Comment -> false
-                            | _ -> true) tokens
     
 let debugTokenizer = fun s -> tokenize s |> Seq.cache
 
-let tokenizer = fun s -> tokenize s |> stripComments |> Seq.cache
+let tokenizer = fun s -> tokenize s |> Seq.cache

@@ -14,7 +14,6 @@ type TokenType =
     | RightParen //)
     | Comma
     | Arrow //->
-    | Comment
 
 type Token = {
     token: TokenType
