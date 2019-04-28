@@ -45,10 +45,14 @@ let split (code: string) =
 
 let lexemeToToken (state: State) (lexeme: string): (Token option * State) =
     match lexeme with
-        | "\n" -> (None, { state with col = 1; line = state.line + 1})
+        | "\n" -> (None, { state with col = 1; line = state.line + 1; comment = false })
         | " " -> (None, { state with col = state.col + 1 })
         | _ ->
-            let token = if keywords.ContainsKey lexeme then
+            let token = 
+                if state.comment then
+                    None
+                else
+                    if keywords.ContainsKey lexeme then
                             token (keywords.[lexeme]) state.col state.line |> Some
                         else
                             None
