@@ -82,11 +82,8 @@ let mapToTokens (delimited: string seq) =
     Seq.choose id tokens
 
 let private tokenize (code: string): Token seq =
-    let tokens = code 
-                    |> split
-                    |> mapToTokens
-    Seq.empty
+    code 
+       |> split
+       |> mapToTokens
     
-let debugTokenizer = fun s -> tokenize s |> Seq.cache
-
 let tokenizer = fun s -> tokenize s |> Seq.cache

@@ -14,7 +14,7 @@ let tokensMatch (expected: TokenType seq) (got: Token seq) =
 [<Fact>]
 let ``Single char tokens`` () =
     let input = ". : ( ) [ ] - > + / *"
-    let tokens = debugTokenizer input
+    let tokens = tokenizer input
     let expected = [
         Dot
         Colon
@@ -33,7 +33,7 @@ let ``Single char tokens`` () =
 [<Fact>]
 let ``Number literals`` () =
     let input = "123 1 2.4 29.0 658.34 7777 12. -1 -3.0 -4."
-    let tokens = debugTokenizer input
+    let tokens = tokenizer input
     let expected = [
         IntLiteral 123L
         IntLiteral 1L
@@ -53,7 +53,7 @@ let ``Number literals`` () =
 [<Fact>]
 let ``String literals`` () =
     let input = """ Test "Test" "" "123" """
-    let tokens = debugTokenizer input
+    let tokens = tokenizer input
     let expected = [
         Identifier "Test"
         StringLiteral "Test"
@@ -65,7 +65,7 @@ let ``String literals`` () =
 [<Fact>]
 let ``Identifiers`` () =
     let input = "abc ++ (test) (vvb == %) ,asdf. a->b"
-    let tokens = debugTokenizer input
+    let tokens = tokenizer input
     let expected = [
         Identifier "abc"
         Identifier "++"
@@ -94,7 +94,7 @@ let ``Code with blocks`` () =
         * x -2
     ]
     """
-    let tokens = debugTokenizer input
+    let tokens = tokenizer input
     let expected = [
         Identifier "z"
         BlockOpen
