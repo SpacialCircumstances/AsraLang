@@ -7,9 +7,9 @@ open Token
 
 let tokensMatch (expected: TokenType seq) (got: Token seq) =
     if Seq.length expected <> Seq.length got then
-        false
+        Assert.True (false, sprintf "Expected length: %i, but got: %i" (Seq.length expected) (Seq.length got))
     else
-        Seq.zip expected got |> Seq.forall (fun (e, gt) -> e = gt.token)
+        Seq.iter2 (fun (e: TokenType) (g: Token) -> Assert.Equal(e, g.token)) expected got
 
 [<Fact>]
 let ``Single char tokens`` () =
@@ -28,7 +28,7 @@ let ``Single char tokens`` () =
         Identifier "*"
         Identifier "."
     ]
-    Assert.True (tokensMatch expected tokens)
+    tokensMatch expected tokens
 
 [<Fact>]
 let ``Number literals`` () =
@@ -48,7 +48,7 @@ let ``Number literals`` () =
         IntLiteral -4L
         Separator
     ]
-    Assert.True (tokensMatch expected tokens)
+    tokensMatch expected tokens
 
 [<Fact>]
 let ``String literals`` () =
@@ -60,7 +60,7 @@ let ``String literals`` () =
         StringLiteral ""
         StringLiteral "123"
     ]
-    Assert.True (tokensMatch expected tokens)
+    tokensMatch expected tokens
 
 [<Fact>]
 let ``Identifiers`` () =
@@ -84,7 +84,7 @@ let ``Identifiers`` () =
         Arrow
         Identifier "b"
     ]
-    Assert.True (tokensMatch expected tokens)
+    tokensMatch expected tokens
 
 [<Fact>]
 let ``Code with blocks`` () =
@@ -119,4 +119,4 @@ let ``Code with blocks`` () =
         Separator
         BlockClose
     ]
-    Assert.True (tokensMatch expected tokens)
+    tokensMatch expected tokens
