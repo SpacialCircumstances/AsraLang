@@ -96,6 +96,7 @@ let ``Code with blocks`` () =
     let tokens = tokenizer input
     let expected = [
         Identifier "z"
+        Equal
         BlockOpen
         Identifier "Int"
         Identifier "a"
