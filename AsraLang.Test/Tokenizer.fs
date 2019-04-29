@@ -13,10 +13,9 @@ let tokensMatch (expected: TokenType seq) (got: Token seq) =
 
 [<Fact>]
 let ``Single char tokens`` () =
-    let input = "; : ( ) [ ] - > + / * ."
+    let input = ": ( ) [ ] - > + / * ."
     let tokens = tokenizer input
     let expected = [
-        Separator
         Colon
         LeftParen
         RightParen
@@ -93,8 +92,7 @@ let ``Code with blocks`` () =
     z = [ Int a, String b, foo c ->
         x = + a b
         * x -2
-    ]
-    """
+    ]"""
     let tokens = tokenizer input
     let expected = [
         Identifier "z"
@@ -108,6 +106,7 @@ let ``Code with blocks`` () =
         Identifier "foo"
         Identifier "c"
         Arrow
+        Separator
         Identifier "x"
         Equal
         Identifier "+"
@@ -117,6 +116,7 @@ let ``Code with blocks`` () =
         Identifier "*"
         Identifier "x"
         IntLiteral -2L
+        Separator
         BlockClose
     ]
     Assert.True (tokensMatch expected tokens)

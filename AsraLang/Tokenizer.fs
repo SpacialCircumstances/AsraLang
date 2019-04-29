@@ -8,6 +8,7 @@ type State = {
     line: int
     col: int
     comment: bool
+    separator: bool
 }
 
 let keywords = dict [
@@ -45,7 +46,16 @@ let split (code: string) =
 
 let lexemeToToken (state: State) (lexeme: string): (Token option * State) =
     match lexeme with
-        | "\n" -> (Some (token Separator state.col state.line), { state with col = 1; line = state.line + 1; comment = false })
+        | "\n" -> 
+            if state.separator then
+                (None, { state with col = 1; line = state.line + 1; comment = false })
+            else
+                (Some (token Separator state.col state.line), { state with col = 1; line = state.line + 1; comment = false; separator = true })
+        | ";" -> 
+            if state.separator then
+                (None, { state with col = 1; comment = false })
+            else
+                (Some (token Separator state.col state.line), { state with col = 1; separator = true })
         | " " -> (None, { state with col = state.col + 1 })
         | "\r" -> (None, { state with col = state.col + 1 })
         | "#" -> (None, { state with col = state.col + 1; comment = true })
@@ -71,13 +81,14 @@ let lexemeToToken (state: State) (lexeme: string): (Token option * State) =
             let token = match tokenType with
                             | Some tt -> Some (token tt state.col state.line)
                             | None -> None
-            (token, { state with col = state.col + lexeme.Length })
+            (token, { state with col = state.col + lexeme.Length; separator = false })
 
 let mapToTokens (delimited: string seq) =
     let init = {
         line = 1
         col = 1
         comment = false
+        separator = true //Parse whitespace on file start
     }
     let tokens, _ = Seq.mapFold lexemeToToken init delimited
     Seq.choose id tokens
