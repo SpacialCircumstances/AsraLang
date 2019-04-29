@@ -12,7 +12,7 @@ type State = {
 
 let keywords = dict [
     "->", Arrow
-    ".", Dot
+    ";", Separator
     ",", Comma
     "=", Equal
     ":", Colon
@@ -22,7 +22,7 @@ let keywords = dict [
     ")", RightParen
 ]
 
-let isDelimiter (c: Char) = Char.IsWhiteSpace c || c = '.' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':' || c = '#'
+let isDelimiter (c: Char) = Char.IsWhiteSpace c || c = ';' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':' || c = '#'
 
 let findNext (source: string) (start: int) (pred: char -> bool) =
     let afterStart = Seq.skip start source
@@ -45,7 +45,7 @@ let split (code: string) =
 
 let lexemeToToken (state: State) (lexeme: string): (Token option * State) =
     match lexeme with
-        | "\n" -> (None, { state with col = 1; line = state.line + 1; comment = false })
+        | "\n" -> (Some (token Separator state.col state.line), { state with col = 1; line = state.line + 1; comment = false })
         | " " -> (None, { state with col = state.col + 1 })
         | "#" -> (None, { state with col = state.col + 1; comment = true })
         | _ ->

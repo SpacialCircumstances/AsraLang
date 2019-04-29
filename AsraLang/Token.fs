@@ -6,7 +6,7 @@ type TokenType =
     | StringLiteral of string
     | Identifier of string
     | Equal
-    | Dot
+    | Separator
     | Colon
     | BlockOpen //[
     | BlockClose //]

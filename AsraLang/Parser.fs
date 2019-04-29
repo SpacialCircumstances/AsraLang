@@ -84,7 +84,7 @@ let parseVariableDefinitionExpression = Parser.Try (map2 (parseDeclaration.Befor
 
 let parseDot = token (fun t ->
                             match t.token with
-                                | Dot -> Some ()
+                                | Separator -> Some ()
                                 | _ -> None)
 
 let parseComma = token (fun t ->

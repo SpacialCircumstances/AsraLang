@@ -99,8 +99,8 @@ let ``Parse block expressions`` () =
 [<Fact>]
 let ``Parse function calls`` () = 
     let input = """
-    + 2 2.
-    [ test ] [ 324. "asdf" ].
+    + 2 2
+    [ test ] [ 324. "asdf" ]
     (test 23 234.3) 12.1 [ x ]
     """    
     let tokens = Tokenizer.tokenizer input
@@ -139,8 +139,8 @@ let ``Parse function calls`` () =
 [<Fact>]
 let ``Type annotated declarations`` () =
     let input = """
-    t1: int = 3.
-    t2: string = "test".
+    t1: int = 3
+    t2: string = "test"
     t5: Foo = 42.2
     """    
     let tokens = Tokenizer.tokenizer input

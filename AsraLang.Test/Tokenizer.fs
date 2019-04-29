@@ -13,10 +13,10 @@ let tokensMatch (expected: TokenType seq) (got: Token seq) =
 
 [<Fact>]
 let ``Single char tokens`` () =
-    let input = ". : ( ) [ ] - > + / *"
+    let input = "; : ( ) [ ] - > + / * ."
     let tokens = tokenizer input
     let expected = [
-        Dot
+        Separator
         Colon
         LeftParen
         RightParen
@@ -27,12 +27,13 @@ let ``Single char tokens`` () =
         Identifier "+"
         Identifier "/"
         Identifier "*"
+        Identifier "."
     ]
     Assert.True (tokensMatch expected tokens)
 
 [<Fact>]
 let ``Number literals`` () =
-    let input = "123 1 2.4 29.0 658.34 7777 12. -1 -3.0 -4."
+    let input = "123 1 2.4 29.0 658.34 7777 12; -1 -3. -4;"
     let tokens = tokenizer input
     let expected = [
         IntLiteral 123L
@@ -42,11 +43,11 @@ let ``Number literals`` () =
         FloatLiteral 658.34
         IntLiteral 7777L
         IntLiteral 12L
-        Dot
+        Separator
         IntLiteral -1L
         FloatLiteral -3.0
         IntLiteral -4L
-        Dot
+        Separator
     ]
     Assert.True (tokensMatch expected tokens)
 
@@ -64,7 +65,7 @@ let ``String literals`` () =
 
 [<Fact>]
 let ``Identifiers`` () =
-    let input = "abc ++ (test) (vvb == %) ,asdf. a->b"
+    let input = "abc ++ (test) (vvb == %) ,asdf; a->b"
     let tokens = tokenizer input
     let expected = [
         Identifier "abc"
@@ -79,7 +80,7 @@ let ``Identifiers`` () =
         RightParen
         Comma
         Identifier "asdf"
-        Dot
+        Separator
         Identifier "a"
         Arrow
         Identifier "b"
@@ -90,7 +91,7 @@ let ``Identifiers`` () =
 let ``Code with blocks`` () =
     let input = """
     z = [ Int a, String b, foo c ->
-        x = + a b.
+        x = + a b
         * x -2
     ]
     """
@@ -112,7 +113,7 @@ let ``Code with blocks`` () =
         Identifier "+"
         Identifier "a"
         Identifier "b"
-        Dot
+        Separator
         Identifier "*"
         Identifier "x"
         IntLiteral -2L
