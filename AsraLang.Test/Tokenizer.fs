@@ -65,7 +65,7 @@ let ``String literals`` () =
 
 [<Fact>]
 let ``Identifiers`` () =
-    let input = "abc ++ (test) (vvb == %) ,asdf; a->b"
+    let input = "abc ++ (test) (vvb == %) ,asdf; a -> b"
     let tokens = tokenizer input
     let expected = [
         Identifier "abc"
