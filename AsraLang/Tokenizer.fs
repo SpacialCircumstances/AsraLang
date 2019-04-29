@@ -47,6 +47,7 @@ let lexemeToToken (state: State) (lexeme: string): (Token option * State) =
     match lexeme with
         | "\n" -> (Some (token Separator state.col state.line), { state with col = 1; line = state.line + 1; comment = false })
         | " " -> (None, { state with col = state.col + 1 })
+        | "\r" -> (None, { state with col = state.col + 1 })
         | "#" -> (None, { state with col = state.col + 1; comment = true })
         | _ ->
             let tokenType = 
