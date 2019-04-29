@@ -58,7 +58,7 @@ let lexemeToToken (state: State) (lexeme: string): (Token option * State) =
                         else
                             if lexeme.StartsWith "\"" && lexeme.EndsWith "\"" then
                                 StringLiteral (lexeme.Substring (1, lexeme.Length - 2)) |> Some
-                            else if Char.IsNumber lexeme.[0] || (lexeme.[0] = '-' && Char.IsNumber lexeme.[1]) then
+                            else if Char.IsNumber lexeme.[0] || (lexeme.[0] = '-' && lexeme.Length > 1 && Char.IsNumber lexeme.[1]) then
                                 if lexeme.Contains "." then
                                     let fl = Double.Parse (lexeme, CultureInfo.InvariantCulture)
                                     Some (FloatLiteral fl)
