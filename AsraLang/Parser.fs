@@ -82,7 +82,7 @@ let parseDeclaration = parseAnnotatedDeclaration.Or parseSimpleDeclaration |> la
 
 let parseVariableDefinitionExpression = Parser.Try (map2 (parseDeclaration.Before(parseEqual)) (prec (fun () -> parsePrimitiveExpression)) (fun d e -> ParseTree.DefineVariableExpression { variableName = d; value = e })) |> label "Variable definition"
 
-let parseDot = token (fun t ->
+let parseSeparator = token (fun t ->
                             match t.token with
                                 | Separator -> Some ()
                                 | _ -> None)
@@ -105,7 +105,7 @@ let parseBlockClose = token (fun t -> match t.token with
                                         | BlockClose -> Some ()
                                         | _ -> None)
 
-let parseExpressions = (prec (fun () -> parseExpression)).Separated parseDot
+let parseExpressions = (prec (fun () -> parseExpression)).SeparatedAndOptionallyTerminated parseSeparator
 
 let parseBlockParameters = (Parser.Try ((parseDeclaration.Separated parseComma).
                                 Before(parseArrow))).Optional() 

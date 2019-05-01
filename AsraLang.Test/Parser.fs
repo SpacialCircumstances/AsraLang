@@ -20,7 +20,7 @@ let isOk (result: Result<'a, 'b>) (f: 'a -> unit) =
 
 [<Fact>]
 let ``Parse literals`` () =
-    let input = """12. 234.5. "test". 123.4"""
+    let input = """12; 234.5; "test"; 123.4"""
     let tokens = Tokenizer.tokenizer input
     let parsed = Parser.parse tokens
     let expected = [
@@ -33,7 +33,7 @@ let ``Parse literals`` () =
 
 [<Fact>]
 let ``Parse literals and variables`` () =
-    let input = """"test". test. 123. t123"""
+    let input = """"test"; test; 123; t123"""
     let tokens = Tokenizer.tokenizer input
     let parsed = Parser.parse tokens
     let expected = [
@@ -46,7 +46,7 @@ let ``Parse literals and variables`` () =
 
 [<Fact>]
 let ``Parse groups`` () =
-    let input = """(123). ("test"). (foo). ((42.6))"""
+    let input = """(123); ("test"); (foo); ((42.6))"""
     let tokens = Tokenizer.tokenizer input
     let parsed = Parser.parse tokens
     let expected = [
@@ -60,7 +60,7 @@ let ``Parse groups`` () =
 [<Fact>]
 let ``Parse variable definitions`` () =
     let input = """
-    test = 42.
+    test = 42
     foo = "test"
     """
     let tokens = Tokenizer.tokenizer input
@@ -75,9 +75,9 @@ let ``Parse variable definitions`` () =
 let ``Parse block expressions`` () =
     let input = """
     testBlock = [
-        "asdf".
-        123.
-        a = 233.
+        "asdf"
+        123
+        a = 233
         [
             456
         ]
@@ -100,7 +100,7 @@ let ``Parse block expressions`` () =
 let ``Parse function calls`` () = 
     let input = """
     + 2 2
-    [ test ] [ 324. "asdf" ]
+    [ test ] [ 324; "asdf" ]
     (test 23 234.3) 12.1 [ x ]
     """    
     let tokens = Tokenizer.tokenizer input
