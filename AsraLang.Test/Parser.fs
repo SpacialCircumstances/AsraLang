@@ -176,4 +176,43 @@ let ``Block with identifier`` () =
     ]
     isOk parsed (fun result -> astMatch expected result)
 
-    
+[<Fact>]
+let ``Block with parameters`` () =
+    let input = """
+    block = [ a: Int, b: Int ->
+        + a b
+    ]
+    [ x: String -> "test" ]
+    """
+    let tokens = Tokenizer.tokenizer input
+    let parsed = Parser.parse tokens
+    let expected = [
+        DefineVariableExpression {
+            variableName = Simple "block"
+            value = BlockExpression {
+                parameters = Some [
+                    Annotated { varName = "a"; typeName = "Int" }
+                    Annotated { varName = "b"; typeName = "Int" }
+                ]
+                body = [
+                    FunctionCallExpression {
+                        func = VariableExpression "+"
+                        arguments = [
+                            VariableExpression "a"
+                            VariableExpression "b"
+                        ]
+                    }
+                ]
+            }
+        }
+        BlockExpression {
+            parameters = Some [
+                Annotated { varName = "x"; typeName = "String" }
+            ]
+            body = [
+                LiteralExpression (StringLiteral "test")
+            ]
+        }
+        
+    ]
+    isOk parsed (fun result -> astMatch expected result)
