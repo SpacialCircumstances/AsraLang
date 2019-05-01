@@ -116,7 +116,7 @@ let parseBlockParameters = (Parser.Try ((parseDeclaration.Separated parseComma).
 let createBlock (parameters: ParseTree.Declaration list option) expressions =
     ParseTree.BlockExpression { parameters = parameters; body = List.ofSeq expressions }
 
-let parseBlock = (map2 parseBlockParameters parseExpressions createBlock).Between (parseBlockOpen, parseBlockClose) |> label "Block"
+let parseBlock = (map2 parseBlockParameters (parseSeparator.Optional().Then(parseExpressions)) createBlock).Between (parseBlockOpen, parseBlockClose) |> label "Block"
 
 let pve = prec (fun () -> parsePrimitiveExpression)
 
