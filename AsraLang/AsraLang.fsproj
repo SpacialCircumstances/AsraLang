@@ -7,6 +7,7 @@
   <ItemGroup>
     <Compile Include="TypedAST.fs" />
     <Compile Include="UntypedAST.fs" />
+    <Compile Include="Typechecker.fs" />
     <Compile Include="Token.fs" />
     <Compile Include="Parser.fs" />
     <Compile Include="Tokenizer.fs" />
