@@ -1,4 +1,4 @@
-﻿module ParseTree
+﻿module AST
 
 type Literal = 
     | StringLiteral of string

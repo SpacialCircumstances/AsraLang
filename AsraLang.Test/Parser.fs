@@ -1,7 +1,7 @@
 ﻿module Parser
 
 open Xunit
-open ParseTree
+open AST
 
 let astMatch (expected: Expression seq) (got: Expression seq) =
     if Seq.length expected <> Seq.length got then
