@@ -121,3 +121,41 @@ let ``Code with blocks`` () =
         BlockClose
     ]
     tokensMatch expected tokens
+
+[<Fact>]
+let ``Comments`` () =
+    let input = """
+    #test asd;nbb
+    z = [ Int a, String b, foo c ->
+        x = + a b
+        #test
+        * x -2
+    ]"""
+    let tokens = tokenizer input
+    let expected = [
+        Identifier "z"
+        Equal
+        BlockOpen
+        Identifier "Int"
+        Identifier "a"
+        Comma
+        Identifier "String"
+        Identifier "b"
+        Comma
+        Identifier "foo"
+        Identifier "c"
+        Arrow
+        Separator
+        Identifier "x"
+        Equal
+        Identifier "+"
+        Identifier "a"
+        Identifier "b"
+        Separator
+        Identifier "*"
+        Identifier "x"
+        IntLiteral -2L
+        Separator
+        BlockClose
+    ]
+    tokensMatch expected tokens

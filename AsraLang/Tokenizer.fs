@@ -57,12 +57,16 @@ let lexemeToToken (state: State) (lexeme: string): (Token option * State) =
     match lexeme with
         | "\n" -> 
             if state.separator then
+                (None, { state with col = 1; line = state.line + 1 })
+            else if state.comment then
                 (None, { state with col = 1; line = state.line + 1; comment = false })
             else
                 (Some (token Separator state.col state.line), { state with col = 1; line = state.line + 1; comment = false; separator = true })
         | ";" -> 
             if state.separator then
                 (None, { state with col = 1; comment = false })
+            else if state.comment then
+                (None, { state with col = state.col + 1 })
             else
                 (Some (token Separator state.col state.line), { state with col = 1; separator = true })
         | " " -> (None, { state with col = state.col + 1 })
