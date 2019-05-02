@@ -4,11 +4,11 @@ open Pidgin
 open Token
 open System
 
-let mutable parseValueExpression = Unchecked.defaultof<Parser<Token, AST.Expression>>
+let mutable parseValueExpression = Unchecked.defaultof<Parser<Token, UntypedAST.Expression>>
 
-let mutable parseExpression = Unchecked.defaultof<Parser<Token, AST.Expression>>
+let mutable parseExpression = Unchecked.defaultof<Parser<Token, UntypedAST.Expression>>
 
-let mutable parsePrimitiveExpression = Unchecked.defaultof<Parser<Token, AST.Expression>>
+let mutable parsePrimitiveExpression = Unchecked.defaultof<Parser<Token, UntypedAST.Expression>>
 
 let token (f: Token -> 'a option) = //TODO: Make more efficient, do not run f twice
     Parser<Token>.Token(Func<Token, bool>(fun t -> match f t with
@@ -33,26 +33,26 @@ let prec (p: unit -> Parser<Token, 'a>) = Parser.Rec(Func<Parser<Token, 'a>>(p))
 
 let parseStringLiteral = token (fun t ->
                                     match t.token with
-                                        | StringLiteral str -> Some (AST.StringLiteral str)
+                                        | StringLiteral str -> Some (UntypedAST.StringLiteral str)
                                         | _ -> None)
 
 let parseIntLiteral = token (fun t ->
                                 match t.token with
-                                    | IntLiteral i -> Some (AST.IntLiteral i)
+                                    | IntLiteral i -> Some (UntypedAST.IntLiteral i)
                                     | _ -> None)
 
 let parseFloatLiteral = token (fun t ->
                                 match t.token with
-                                    | FloatLiteral f -> Some (AST.FloatLiteral f)
+                                    | FloatLiteral f -> Some (UntypedAST.FloatLiteral f)
                                     | _ -> None)
 
-let parseLiteralExpression = choice [ parseStringLiteral; parseFloatLiteral; parseIntLiteral ] <!> AST.LiteralExpression |> label "Literal"
+let parseLiteralExpression = choice [ parseStringLiteral; parseFloatLiteral; parseIntLiteral ] <!> UntypedAST.LiteralExpression |> label "Literal"
 
 let parseIdentifier = token (fun t -> match t.token with
                                                 | Identifier i -> Some i
                                                 | _ -> None)
 
-let parseVariableExpression = parseIdentifier <!> AST.VariableExpression
+let parseVariableExpression = parseIdentifier <!> UntypedAST.VariableExpression
 
 let parseLeftParen = token (fun t -> match t.token with
                                         | LeftParen -> Some ()
@@ -62,13 +62,13 @@ let parseRightParen = token (fun t -> match t.token with
                                         | RightParen -> Some ()
                                         | _ -> None)
 
-let parseGroupExpression = parseLeftParen.Then(prec (fun () -> parseValueExpression)).Before(parseRightParen) <!> AST.GroupExpression
+let parseGroupExpression = parseLeftParen.Then(prec (fun () -> parseValueExpression)).Before(parseRightParen) <!> UntypedAST.GroupExpression
 
 let parseEqual = token (fun t -> match t.token with
                                         | Equal -> Some ()
                                         | _ -> None)
 
-let parseSimpleDeclaration = parseIdentifier <!> AST.Simple
+let parseSimpleDeclaration = parseIdentifier <!> UntypedAST.Simple
 
 let parseColon = token (fun t -> match t.token with
                                         | Colon -> Some ()
@@ -76,11 +76,11 @@ let parseColon = token (fun t -> match t.token with
 
 let parseType = parseIdentifier //TODO: Support generics, complex types...
 
-let parseAnnotatedDeclaration = map2 (parseIdentifier.Before parseColon) parseType (fun name tp -> AST.Annotated { varName = name; typeName = tp }) |> Parser.Try
+let parseAnnotatedDeclaration = map2 (parseIdentifier.Before parseColon) parseType (fun name tp -> UntypedAST.Annotated { varName = name; typeName = tp }) |> Parser.Try
 
 let parseDeclaration = parseAnnotatedDeclaration.Or parseSimpleDeclaration |> label "Variable declaration" //TODO: Declaration with type annotation
 
-let parseVariableDefinitionExpression = Parser.Try (map2 (parseDeclaration.Before(parseEqual)) (prec (fun () -> parsePrimitiveExpression)) (fun d e -> AST.DefineVariableExpression { variableName = d; value = e })) |> label "Variable definition"
+let parseVariableDefinitionExpression = Parser.Try (map2 (parseDeclaration.Before(parseEqual)) (prec (fun () -> parsePrimitiveExpression)) (fun d e -> UntypedAST.DefineVariableExpression { variableName = d; value = e })) |> label "Variable definition"
 
 let parseSeparator = token (fun t ->
                             match t.token with
@@ -113,8 +113,8 @@ let parseBlockParameters = (Parser.Try ((parseDeclaration.Separated parseComma).
                                                           | true -> Some (List.ofSeq parameters.Value)
                                                           | false -> None)
 
-let createBlock (parameters: AST.Declaration list option) expressions =
-    AST.BlockExpression { parameters = parameters; body = List.ofSeq expressions }
+let createBlock (parameters: UntypedAST.Declaration list option) expressions =
+    UntypedAST.BlockExpression { parameters = parameters; body = List.ofSeq expressions }
 
 let parseBlock = (map2 parseBlockParameters (parseSeparator.Optional().Then(parseExpressions)) createBlock).Between (parseBlockOpen, parseBlockClose) |> label "Block"
 
@@ -122,7 +122,7 @@ let pve = prec (fun () -> parsePrimitiveExpression)
 
 //TODO: Rethink parser order so we do not have to backtrack on fun calls
 
-let parseFunCall = map2 pve (pve.AtLeastOnce()) (fun first exprs -> AST.FunctionCallExpression { func = first; arguments = List.ofSeq exprs }) |> Parser.Try |> label "Function call"
+let parseFunCall = map2 pve (pve.AtLeastOnce()) (fun first exprs -> UntypedAST.FunctionCallExpression { func = first; arguments = List.ofSeq exprs }) |> Parser.Try |> label "Function call"
 
 parsePrimitiveExpression <- choice [
     parseBlock

@@ -1,4 +1,4 @@
-﻿module AST
+﻿module UntypedAST
 
 type Literal = 
     | StringLiteral of string
