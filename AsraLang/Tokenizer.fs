@@ -61,14 +61,14 @@ let lexemeToToken (state: State) (lexeme: string): (Token option * State) =
             else if state.comment then
                 (None, { state with col = 1; line = state.line + 1; comment = false })
             else
-                (Some (token Separator state.col state.line), { state with col = 1; line = state.line + 1; comment = false; separator = true })
+                (Some { token = Separator; length = 1; lineSpan = 1; col = state.col; line = state.line }, { state with col = 1; line = state.line + 1; comment = false; separator = true })
         | ";" -> 
             if state.separator then
                 (None, { state with col = 1; comment = false })
             else if state.comment then
                 (None, { state with col = state.col + 1 })
             else
-                (Some (token Separator state.col state.line), { state with col = 1; separator = true })
+                (Some (token Separator state.col state.line lexeme.Length), { state with col = 1; separator = true })
         | " " -> (None, { state with col = state.col + 1 })
         | "\r" -> (None, { state with col = state.col + 1 })
         | "#" -> (None, { state with col = state.col + 1; comment = true })
@@ -90,7 +90,7 @@ let lexemeToToken (state: State) (lexeme: string): (Token option * State) =
                             else
                                 Some (Identifier lexeme)
             let token = match tokenType with
-                            | Some tt -> Some (token tt state.col state.line)
+                            | Some tt -> Some (token tt state.col state.line lexeme.Length)
                             | None -> None
             (token, { state with col = state.col + lexeme.Length; separator = false })
 

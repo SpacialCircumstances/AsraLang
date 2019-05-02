@@ -145,7 +145,7 @@ parseExpression <- choice [
 let programParser = parseExpressions
 
 let calculatePosition (t: Token) (_: SourcePos) =
-    SourcePos(t.line, t.col)
+    SourcePos(t.line + t.lineSpan, t.col + t.length)
 
 let parse (tokens: Token seq) = 
     let res = programParser.Parse(tokens, Func<Token, SourcePos, SourcePos>(calculatePosition))

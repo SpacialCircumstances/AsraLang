@@ -20,6 +20,8 @@ type Token = {
     token: TokenType
     col: int
     line: int
+    length: int
+    lineSpan: int
 }
 
-let token (t: TokenType) (c: int) (l: int) = { token = t; col = c; line = l }
+let token (t: TokenType) (c: int) (l: int) (len: int) = { token = t; col = c; line = l; length = len; lineSpan = 0 }
