@@ -23,6 +23,9 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                                     | U.FloatLiteral f ->
                                         T.Float f, T.Native "Float"
             T.LiteralExpression { atype = litType; literalValue = literal }, state
+        | U.GroupExpression e ->
+            let subExpr, newState = typeExpr state e
+            T.GroupExpression subExpr, newState
         | _ -> raise(System.NotImplementedException())
 
 let typecheck (program: U.Expression seq) =
