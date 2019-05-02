@@ -14,6 +14,7 @@ type TokenType =
     | RightParen //)
     | Comma
     | Arrow //->
+    | Unrecognized of string
 
 type Token = {
     token: TokenType
