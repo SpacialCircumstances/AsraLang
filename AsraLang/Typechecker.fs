@@ -37,6 +37,14 @@ let rec typeExpr (state: State) (expr: U.Expression) =
             //TODO: Check type annotation if it matches
             let newState = { state with context = newContext }
             T.VariableBindingExpression binding, newState
+        | U.VariableExpression var ->
+            let varType = Map.tryFind var state.context
+            match varType with
+                | Some varType ->
+                    T.VariableExpression (var, varType), state
+                | None ->
+                    //TODO: We need error handling
+                    invalidOp (sprintf "Variable %s not found" var)
         | _ -> raise(System.NotImplementedException())
 
 let typecheck (program: U.Expression seq) =
