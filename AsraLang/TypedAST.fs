@@ -29,11 +29,13 @@ and FunctionCall = {
     func: Expression
     funcType: AType
     args: (Expression * AType) list
+    returnType: AType
 }
 
 and Block = {
     parameters: (Expression * AType) list
     body: (Expression * AType) list
+    blockType: AType
 }
 
 and Expression =
@@ -43,3 +45,12 @@ and Expression =
     | VariableExpression of string * AType
     | BlockExpression of Block
     | GroupExpression of Expression
+
+let rec getType (expr: Expression) =
+    match expr with
+        | LiteralExpression lit -> lit.atype
+        | VariableBindingExpression bind -> bind.varType
+        | FunctionCallExpression fc -> fc.returnType
+        | VariableExpression (_ , t) -> t
+        | BlockExpression block -> block.blockType
+        | GroupExpression expr -> getType expr

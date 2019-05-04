@@ -26,6 +26,17 @@ let rec typeExpr (state: State) (expr: U.Expression) =
         | U.GroupExpression e ->
             let subExpr, newState = typeExpr state e
             T.GroupExpression subExpr, newState
+        | U.DefineVariableExpression def ->
+            let result, _ = typeExpr state def.value
+            let valueType = T.getType result
+            let name = match def.variableName with
+                        | U.Simple s -> s
+                        | U.Annotated a -> a.varName
+            let binding: T.VariableBinding = { varName = name; varType = valueType; value = result }
+            let newContext = Map.add name valueType state.context
+            //TODO: Check type annotation if it matches
+            let newState = { state with context = newContext }
+            T.VariableBindingExpression binding, newState
         | _ -> raise(System.NotImplementedException())
 
 let typecheck (program: U.Expression seq) =
