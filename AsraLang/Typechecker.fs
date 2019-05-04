@@ -45,6 +45,15 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                 | None ->
                     //TODO: We need error handling
                     invalidOp (sprintf "Variable %s not found" var)
+        | U.FunctionCallExpression fc ->
+            let args = List.map (fun a -> 
+                                    let e, _ = typeExpr state a
+                                    e, T.getType e) fc.arguments
+            let funExp, _ = typeExpr state fc.func
+            let funType = T.getType funExp
+            let retType = T.returnType funType (List.map (fun (_, t) -> t) args)
+            let call: T.FunctionCall = { func = funExp; funcType = funType; args = args; returnType = retType }
+            T.FunctionCallExpression call, state
         | _ -> raise(System.NotImplementedException())
 
 let typecheck (program: U.Expression seq) =

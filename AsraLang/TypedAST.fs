@@ -54,3 +54,6 @@ let rec getType (expr: Expression) =
         | VariableExpression (_ , t) -> t
         | BlockExpression block -> block.blockType
         | GroupExpression expr -> getType expr
+
+let rec returnType (funcT: AType) (paramTs: AType list) =
+    funcT //TODO!!!
