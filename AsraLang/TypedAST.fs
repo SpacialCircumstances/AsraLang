@@ -8,6 +8,10 @@ type FunType = {
 and AType = 
     | Native of string
     | FunctionType of FunType
+with
+    override x.ToString() = match x with
+                                | Native str -> str
+                                | FunctionType funt -> sprintf "%O -> %O" funt.input funt.output
 
 type LiteralValue = 
     | Int of int64
