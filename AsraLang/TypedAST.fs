@@ -59,5 +59,17 @@ let rec getType (expr: Expression) =
         | BlockExpression block -> block.blockType
         | GroupExpression expr -> getType expr
 
-let rec returnType (funcT: AType) (paramTs: AType list) =
-    funcT //TODO!!!
+let rec returnType (funcT: AType) (paramTs: AType list): Result<AType, string> =
+    match funcT with
+        | Native t -> 
+            match List.length paramTs with
+                | 0 -> Ok funcT
+                | _ -> sprintf "Type %A is not a function" t |> Error
+        | FunctionType t -> 
+            match List.tryHead paramTs with
+                | None -> Ok funcT //Currying
+                | Some pt ->
+                    if pt = t.input then
+                        returnType t.output (List.tail paramTs)
+                    else
+                        sprintf "Expected type: %A, but got %A instead" t.input pt |> Error

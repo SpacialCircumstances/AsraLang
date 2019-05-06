@@ -51,9 +51,11 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                                     e, T.getType e) fc.arguments
             let funExp, _ = typeExpr state fc.func
             let funType = T.getType funExp
-            let retType = T.returnType funType (List.map (fun (_, t) -> t) args)
-            let call: T.FunctionCall = { func = funExp; funcType = funType; args = args; returnType = retType }
-            T.FunctionCallExpression call, state
+            match T.returnType funType (List.map (fun (_, t) -> t) args) with
+                | Ok retType ->
+                    let call: T.FunctionCall = { func = funExp; funcType = funType; args = args; returnType = retType }
+                    T.FunctionCallExpression call, state
+                | Error e -> invalidOp e
         | _ -> raise(System.NotImplementedException())
 
 let typecheck (program: U.Expression seq) =
