@@ -9,6 +9,7 @@ type Error = {
 
 type State = {
     context: Map<string, T.AType>
+    types: Map<string, T.AType>
     errors: Error list
 }
 
@@ -56,8 +57,18 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                     let call: T.FunctionCall = { func = funExp; funcType = funType; args = args; returnType = retType }
                     T.FunctionCallExpression call, state
                 | Error e -> invalidOp e
-        | _ -> raise(System.NotImplementedException())
+        | U.BlockExpression block ->
+            match block.parameters with
+                | None ->
+                    let body, _ = List.mapFold typeExpr state block.body
+                    let tbody = List.map (fun e -> e, T.getType e) body
+                    let _, rt = List.last tbody
+                    let bt = T.FunctionType { input = T.Native "Unit"; output = rt } 
+                    let tblock: T.Block = { parameters = []; body = tbody; blockType = bt }
+                    T.BlockExpression tblock, state
+                | Some parameters ->
+                    invalidOp ""
 
 let typecheck (program: U.Expression seq) =
-    let init = { context = Map.empty; errors = [] }
+    let init = { context = Map.empty; errors = []; types = Map.empty }
     Seq.mapFold typeExpr init program
