@@ -42,7 +42,7 @@ and FunctionCall = {
 }
 
 and Block = {
-    parameters: (Expression * AType) list
+    parameters: (string * AType) list
     body: (Expression * AType) list
     blockType: AType
 }
@@ -78,3 +78,9 @@ let rec returnType (funcT: AType) (paramTs: AType list): Result<AType, string> =
                         returnType t.output (List.tail paramTs)
                     else
                         sprintf "Expected type: %A, but got %A instead" t.input pt |> Error
+
+let rec genFunType (paramTypes: AType list) (retType: AType) = 
+    match paramTypes with
+        | [] -> invalidOp "Cannot create function type from empty parameters"
+        | [tp] -> FunctionType { input = tp; output = retType }
+        | tp :: x -> FunctionType { input = tp; output = genFunType x retType }
