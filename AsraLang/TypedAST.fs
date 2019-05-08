@@ -11,7 +11,12 @@ and AType =
 with
     override x.ToString() = match x with
                                 | Native str -> str
-                                | FunctionType funt -> sprintf "%O -> %O" funt.input funt.output
+                                | FunctionType funt -> 
+                                    match funt.input with
+                                        | Native tp ->
+                                            sprintf "%s -> %O" tp funt.output
+                                        | FunctionType ft ->
+                                            sprintf "(%A -> %A) %A" ft.input ft.output funt.output
 
 type LiteralValue = 
     | Int of int64
