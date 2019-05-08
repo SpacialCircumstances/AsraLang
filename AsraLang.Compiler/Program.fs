@@ -1,6 +1,19 @@
 ﻿open System
+open System.IO
+open Tokenizer
+open Parser
+open Typechecker
 
 [<EntryPoint>]
 let main argv =
-    printfn "Hello World from F#!"
+    let inFile = argv.[0]
+    let outFile = argv.[1]
+    let ast = File.ReadAllText inFile 
+                |> tokenizer
+                |> parse
+    match ast with
+        | Error e -> printfn "%A" e
+        | Ok ast ->
+            let typedAst, _ = typecheck ast
+            ()
     0
