@@ -10,7 +10,6 @@ type Error = {
 type State = {
     context: Map<string, T.AType>
     types: Map<string, T.AType>
-    errors: Error list
 }
 
 let resolveType (state: State) (typeName: string) = Map.find typeName state.types
@@ -82,5 +81,5 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                     T.BlockExpression tblock, state
 
 let typecheck (program: U.Expression seq) =
-    let init = { context = Map.empty; errors = []; types = Map.empty }
+    let init = { context = Map.empty; types = Map.empty }
     Seq.mapFold typeExpr init program
