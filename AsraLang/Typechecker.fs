@@ -73,7 +73,7 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                                                             | U.Annotated t -> (t.varName, resolveType state t.typeName)) parameters
                     let blockContext = List.fold (fun ctx (p, pt) -> Map.add p pt ctx) state.context typedParams
                     let blockState = { state with context = blockContext }
-                    let body, _ = List.mapFold typeExpr state block.body
+                    let body, _ = List.mapFold typeExpr blockState block.body
                     let tbody = List.map (fun e -> e, T.getType e) body
                     let _, rt = List.last tbody
                     let bt = T.genFunType (List.map (fun (_, t) -> t) tbody) rt
