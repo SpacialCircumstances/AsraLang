@@ -3,6 +3,42 @@
 open TypedAST
 open Xunit
 
+let assertEqResult (expected: 'a) (got: Result<'a, 'b>) =
+    let gotR = match got with
+                    | Error e -> 
+                        Assert.True(false, e.ToString())
+                        invalidOp "Unreachable"
+                    | Ok g -> g
+    Assert.Equal<'a>(expected, gotR)
+
+[<Fact>]
+let ``Call types`` () =
+    let i = Native "Int"
+    let f = Native "Float"
+    let s = Native "String"
+    let funcT = FunctionType {
+        input = i;
+        output = FunctionType {
+            input = i;
+            output = FunctionType {
+                input = i;
+                output = s;
+            }
+        }
+    }
+    let p1 = [ i; i ]
+    let p2 = [ i; i; i ]
+    let p3 = [ i; f; s ]
+    let pr1 = FunctionType {
+        input = i;
+        output = s;
+    }
+    assertEqResult pr1 (returnType funcT p1)
+    assertEqResult s (returnType funcT p2)
+    Assert.True(match returnType funcT p3 with
+                | Error _ -> true
+                | Ok _ -> false)
+
 [<Fact>]
 let ``Block types`` () =
     let i = Native "Int"
