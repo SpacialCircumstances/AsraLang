@@ -81,5 +81,5 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                     T.BlockExpression tblock, state
 
 let typecheck (program: U.Expression seq) =
-    let init = { context = Map.empty; types = Map.empty }
+    let init = { context = Map.ofList [ "println", T.genFunType [ T.Native "String" ] (T.Native "Unit") ]; types = Map.empty }
     Seq.mapFold typeExpr init program
