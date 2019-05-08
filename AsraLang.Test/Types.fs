@@ -4,6 +4,35 @@ open TypedAST
 open Xunit
 
 [<Fact>]
+let ``Block types`` () =
+    let i = Native "Int"
+    let s = Native "String"
+    let f = Native "Float"
+    let p1 = [
+        s
+        FunctionType {
+            input = i;
+            output = s;
+        }
+        i
+    ]
+    let bt = genFunType p1 f
+    let expected = FunctionType {
+        input = s;
+        output = FunctionType {
+            input = FunctionType {
+                input = i;
+                output = s;
+            }
+            output = FunctionType {
+                input = i;
+                output = f;
+            }
+        }
+    }
+    Assert.Equal(expected, bt)
+
+[<Fact>]
 let ``Type printing`` () =
     let t1 = Native "String"
     let t2 = Native "Unit"
