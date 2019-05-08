@@ -52,11 +52,11 @@ let ``Number literals`` () =
 
 [<Fact>]
 let ``String literals`` () =
-    let input = """ Test "Test" "" "123" """
+    let input = """ Test "Test Test" "" "123" """
     let tokens = tokenizer input
     let expected = [
         Identifier "Test"
-        StringLiteral "Test"
+        StringLiteral "Test Test"
         StringLiteral ""
         StringLiteral "123"
     ]
