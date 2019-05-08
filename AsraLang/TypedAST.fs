@@ -16,7 +16,7 @@ with
                                         | Native tp ->
                                             sprintf "%s -> %O" tp funt.output
                                         | FunctionType ft ->
-                                            sprintf "(%A -> %A) %A" ft.input ft.output funt.output
+                                            sprintf "(%O -> %O) -> %O" ft.input ft.output funt.output
 
 type LiteralValue = 
     | Int of int64
