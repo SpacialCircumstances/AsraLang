@@ -64,7 +64,7 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                     let body, _ = List.mapFold typeExpr state block.body
                     let tbody = List.map (fun e -> e, T.getType e) body
                     let _, rt = List.last tbody
-                    let bt = T.FunctionType { input = T.Native "Unit"; output = rt } 
+                    let bt = T.genFunType [] rt
                     let tblock: T.Block = { parameters = []; body = tbody; blockType = bt }
                     T.BlockExpression tblock, state
                 | Some parameters ->

@@ -81,6 +81,6 @@ let rec returnType (funcT: AType) (paramTs: AType list): Result<AType, string> =
 
 let rec genFunType (paramTypes: AType list) (retType: AType) = 
     match paramTypes with
-        | [] -> invalidOp "Cannot create function type from empty parameters"
+        | [] -> FunctionType { input = Native "Unit"; output = retType }
         | [tp] -> FunctionType { input = tp; output = retType }
         | tp :: x -> FunctionType { input = tp; output = genFunType x retType }
