@@ -6,6 +6,8 @@ open System
 
 let (expressionParser: Parser<Expression, unit>, expressionParserRef) = createParserForwardedToRef ()
 
+let (primitiveExpressionParser: Parser<Expression, unit>, primitiveExpressionParserRef) = createParserForwardedToRef ()
+
 let isSeparator (c: char) = Char.IsWhiteSpace c || c = ';' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':' || c = '#'
 
 let isIdentifierStart (c: char) = (not (isDigit c)) && not (isSeparator c)
@@ -41,15 +43,24 @@ let closeParensParser: Parser<char, unit> = pchar ')'
 
 let groupExpressionParser = between openParensParser closeParensParser expressionParser |>> GroupExpression
 
-let singleExpressionParser = choice [
+let equalsParser = pchar '='
+
+let variableDefinitionParser = identifierParser .>> ws .>> equalsParser .>> ws .>>. primitiveExpressionParser .>> ws |>> (fun (name, expr) -> DefineVariableExpression { variableName = Simple name; value = expr })
+
+primitiveExpressionParserRef := choice [
     literalExpressionParser
     groupExpressionParser
     variableExpressionParser
 ]
 
-expressionParserRef := ws >>. singleExpressionParser .>> ws
+let singleExpressionParser = choice [
+    variableDefinitionParser |> attempt
+    primitiveExpressionParser
+]
 
-let programParser = sepEndBy expressionParser separatorParser .>> eof
+expressionParserRef := ws >>? singleExpressionParser .>> ws
+
+let programParser = spaces >>. sepEndBy expressionParser separatorParser .>> spaces .>> eof
 
 let parse (code: string) = match CharParsers.run programParser code with
                                 | Success (res, a, b) -> Result.Ok res

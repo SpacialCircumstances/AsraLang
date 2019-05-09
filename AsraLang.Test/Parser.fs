@@ -61,7 +61,7 @@ let ``Parse groups`` () =
 let ``Parse variable definitions`` () =
     let input = """
     test = 42
-    foo = "test"
+    foo = "test" 
     """
     let tokens = Tokenizer.tokenizer input
     let parsed = Parser.parse tokens
