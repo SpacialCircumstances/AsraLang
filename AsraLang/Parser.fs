@@ -55,7 +55,10 @@ let declarationParser = annotatedDeclarationParser <|> simpleDeclarationParser
 
 let variableDefinitionParser = declarationParser .>> equalsParser .>> ws .>>. primitiveExpressionParser .>> ws |>> (fun (decl, expr) -> DefineVariableExpression { variableName = decl; value = expr })
 
+let blockParser = skipChar '[' >>. spaces >>. (sepEndBy expressionParser separatorParser) .>> skipChar ']' |>> fun exprs -> BlockExpression { parameters = None; body = exprs }
+
 primitiveExpressionParserRef := choice [
+    blockParser
     literalExpressionParser
     groupExpressionParser
     variableExpressionParser
