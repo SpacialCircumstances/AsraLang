@@ -4,6 +4,13 @@ open FParsec
 open UntypedAST
 open System
 
+let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
+    fun stream ->
+        System.Diagnostics.Debug.WriteLine (sprintf "%A: Entering %s" stream.Position label)
+        let reply = p stream
+        System.Diagnostics.Debug.WriteLine (sprintf "%A: Leaving %s (%A)" stream.Position label reply.Status)
+        reply
+
 let (expressionParser: Parser<Expression, unit>, expressionParserRef) = createParserForwardedToRef ()
 
 let (primitiveExpressionParser: Parser<Expression, unit>, primitiveExpressionParserRef) = createParserForwardedToRef ()
@@ -53,16 +60,15 @@ let annotatedDeclarationParser = ws >>. identifierParser .>> skipChar ':' .>> ws
 
 let declarationParser = annotatedDeclarationParser <|> simpleDeclarationParser
 
-let variableDefinitionParser = declarationParser .>> equalsParser .>> ws .>>. primitiveExpressionParser .>> ws |>> (fun (decl, expr) -> DefineVariableExpression { variableName = decl; value = expr })
+let variableDefinitionParser = declarationParser .>> equalsParser .>> ws .>>. primitiveExpressionParser .>> ws |>> (fun (decl, expr) -> DefineVariableExpression { variableName = decl; value = expr }) <!> "Variable definition parser"
 
-let blockParser = skipChar '[' >>. spaces >>. (sepEndBy expressionParser separatorParser) .>> skipChar ']' |>> fun exprs -> BlockExpression { parameters = None; body = exprs }
+let blockParser = skipChar '[' >>. spaces >>. (sepEndBy expressionParser separatorParser) .>> skipChar ']' |>> (fun exprs -> BlockExpression { parameters = None; body = exprs }) <!> "Block expression parser"
 
 primitiveExpressionParserRef := choice [
     blockParser
     literalExpressionParser
     groupExpressionParser
-    variableExpressionParser
-]
+    variableExpressionParser ] <!> "Primitive expression parser"
 
 let singleExpressionParser = choice [
     variableDefinitionParser |> attempt
