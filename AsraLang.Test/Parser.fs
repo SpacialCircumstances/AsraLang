@@ -61,13 +61,13 @@ let ``Parse groups`` () =
 let ``Parse variable definitions`` () =
     let input = """
     test = 42
-    foo = "test" 
+    fooBar = "test" 
     """
     let tokens = Tokenizer.tokenizer input
     let parsed = Parser.parse tokens
     let expected = [
         DefineVariableExpression { variableName = Simple "test"; value = (LiteralExpression (IntLiteral 42L)) }
-        DefineVariableExpression { variableName = Simple "foo"; value = (LiteralExpression (StringLiteral "test")) }
+        DefineVariableExpression { variableName = Simple "fooBar"; value = (LiteralExpression (StringLiteral "test")) }
     ]
     isOk parsed (fun result -> astMatch expected result)
 
