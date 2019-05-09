@@ -4,6 +4,8 @@ open FParsec
 open UntypedAST
 open System
 
+let (expressionParser: Parser<Expression, unit>, expressionParserRef) = createParserForwardedToRef ()
+
 let isSeparator (c: char) = Char.IsWhiteSpace c || c = ';' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':' || c = '#'
 
 let isIdentifierStart (c: char) = (not (isDigit c)) && not (isSeparator c)
@@ -33,12 +35,19 @@ let separatorParser = skipMany1 (skipChar '\n' <|> skipChar ';')
 
 let ws = skipMany (pchar ' ' <|> pchar '\t')
 
+let openParensParser: Parser<char, unit> = pchar '('
+
+let closeParensParser: Parser<char, unit> = pchar ')'
+
+let groupExpressionParser = between openParensParser closeParensParser expressionParser |>> GroupExpression
+
 let singleExpressionParser = choice [
     literalExpressionParser
+    groupExpressionParser
     variableExpressionParser
 ]
 
-let expressionParser = ws >>. singleExpressionParser .>> ws
+expressionParserRef := ws >>. singleExpressionParser .>> ws
 
 let programParser = sepEndBy expressionParser separatorParser .>> eof
 
