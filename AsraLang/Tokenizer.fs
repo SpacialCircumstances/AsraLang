@@ -109,4 +109,4 @@ let private tokenize (code: string): Token seq =
        |> split
        |> mapToTokens
     
-let tokenizer = fun s -> tokenize s |> Seq.cache
+let tokenizer = id//fun s -> tokenize s |> Seq.cache
