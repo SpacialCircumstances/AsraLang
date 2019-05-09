@@ -43,9 +43,17 @@ let closeParensParser: Parser<char, unit> = pchar ')'
 
 let groupExpressionParser = between openParensParser closeParensParser expressionParser |>> GroupExpression
 
+let typeParser = identifierParser
+
 let equalsParser = pchar '='
 
-let variableDefinitionParser = identifierParser .>> ws .>> equalsParser .>> ws .>>. primitiveExpressionParser .>> ws |>> (fun (name, expr) -> DefineVariableExpression { variableName = Simple name; value = expr })
+let simpleDeclarationParser = ws >>. identifierParser .>> ws |>> Simple
+
+let annotatedDeclarationParser = ws >>. identifierParser .>> skipChar ':' .>> ws .>>. typeParser .>> ws |>> (fun (name, tp) -> Annotated { varName = name; typeName = tp }) |> attempt
+
+let declarationParser = annotatedDeclarationParser <|> simpleDeclarationParser
+
+let variableDefinitionParser = declarationParser .>> equalsParser .>> ws .>>. primitiveExpressionParser .>> ws |>> (fun (decl, expr) -> DefineVariableExpression { variableName = decl; value = expr })
 
 primitiveExpressionParserRef := choice [
     literalExpressionParser
