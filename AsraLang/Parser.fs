@@ -62,7 +62,13 @@ let declarationParser = annotatedDeclarationParser <|> simpleDeclarationParser
 
 let variableDefinitionParser = declarationParser .>> equalsParser .>> ws .>>. primitiveExpressionParser .>> ws |>> (fun (decl, expr) -> DefineVariableExpression { variableName = decl; value = expr }) <!> "Variable definition parser"
 
-let blockParser = skipChar '[' >>. spaces >>. (sepEndBy expressionParser separatorParser) .>> spaces .>> skipChar ']' |>> (fun exprs -> BlockExpression { parameters = None; body = exprs }) <!> "Block expression parser"
+let commaParser = skipChar ','
+
+let arrowParser = skipString "->"
+
+let blockParameterParser = ((sepBy (ws >>. declarationParser .>> ws) commaParser) .>> ws .>> arrowParser) |> attempt |> opt
+
+let blockParser = skipChar '[' >>. blockParameterParser .>> spaces .>>. (sepEndBy expressionParser separatorParser) .>> spaces .>> skipChar ']' |>> (fun (paramsOpt, exprs) -> BlockExpression { parameters = paramsOpt; body = exprs }) <!> "Block expression parser"
 
 primitiveExpressionParserRef := choice [
     blockParser
