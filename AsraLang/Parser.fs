@@ -13,7 +13,7 @@ let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
 
 let (expressionParser: Parser<Expression, unit>, expressionParserRef) = createParserForwardedToRef ()
 
-let (primitiveExpressionParser: Parser<Expression, unit>, primitiveExpressionParserRef) = createParserForwardedToRef ()
+let (valueExpressionParser: Parser<Expression, unit>, valueExpressionParserRef) = createParserForwardedToRef ()
 
 let isSeparator (c: char) = Char.IsWhiteSpace c || c = ';' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':' || c = '#'
 
@@ -36,7 +36,7 @@ let quoteParser = skipChar '"'
 
 let stringLiteralParser = quoteParser >>. (manyCharsTill anyChar quoteParser) |>> (fun s -> StringLiteral s)
 
-let literalExpressionParser = choice [ stringLiteralParser; floatLiteralParser; intLiteralParser ] |>> (fun lit -> LiteralExpression lit)
+let literalExpressionParser = choice [ stringLiteralParser; floatLiteralParser; intLiteralParser ] |>> (fun lit -> LiteralExpression lit) <!> "Literal expression parser"
 
 let variableExpressionParser = identifierParser |>> VariableExpression
 
@@ -60,7 +60,7 @@ let annotatedDeclarationParser = ws >>. identifierParser .>> skipChar ':' .>> ws
 
 let declarationParser = annotatedDeclarationParser <|> simpleDeclarationParser
 
-let variableDefinitionParser = declarationParser .>> equalsParser .>> ws .>>. primitiveExpressionParser .>> ws |>> (fun (decl, expr) -> DefineVariableExpression { variableName = decl; value = expr }) <!> "Variable definition parser"
+let variableDefinitionParser = declarationParser .>> equalsParser .>> ws .>>. valueExpressionParser .>> ws |>> (fun (decl, expr) -> DefineVariableExpression { variableName = decl; value = expr }) <!> "Variable definition parser"
 
 let commaParser = skipChar ','
 
@@ -70,15 +70,24 @@ let blockParameterParser = ((sepBy (ws >>. declarationParser .>> ws) commaParser
 
 let blockParser = skipChar '[' >>. blockParameterParser .>> spaces .>>. (sepEndBy expressionParser separatorParser) .>> spaces .>> skipChar ']' |>> (fun (paramsOpt, exprs) -> BlockExpression { parameters = paramsOpt; body = exprs }) <!> "Block expression parser"
 
-primitiveExpressionParserRef := choice [
-    blockParser
-    literalExpressionParser
-    groupExpressionParser
-    variableExpressionParser ] <!> "Primitive expression parser"
+let primitiveExpressionParser = 
+    choice [
+        blockParser
+        literalExpressionParser
+        groupExpressionParser
+        variableExpressionParser ] <!> "Primitive expression parser"
+
+let functionCallParser = primitiveExpressionParser .>>? ws .>>.? (sepEndBy1 primitiveExpressionParser ws) |>> (fun (first, exprs) -> FunctionCallExpression { func = first; arguments = exprs }) <!> "Function call parser"
+
+valueExpressionParserRef := choice [
+    functionCallParser
+    primitiveExpressionParser
+] <!> "Value expression parser"
+
 
 let singleExpressionParser = choice [
     variableDefinitionParser |> attempt
-    primitiveExpressionParser
+    valueExpressionParser
 ]
 
 expressionParserRef := ws >>? singleExpressionParser .>> ws
