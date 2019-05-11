@@ -1,154 +1,101 @@
 ﻿module Parser
 
-open Pidgin
-open Token
+open FParsec
+open UntypedAST
 open System
 
-let mutable parseValueExpression = Unchecked.defaultof<Parser<Token, UntypedAST.Expression>>
+let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
+    if Config.currentConfig.parserTracing then
+        fun stream ->
+            System.Diagnostics.Debug.WriteLine (sprintf "%A: Entering %s" stream.Position label)
+            let reply = p stream
+            System.Diagnostics.Debug.WriteLine (sprintf "%A: Leaving %s (%A)" stream.Position label reply.Status)
+            reply
+    else p
 
-let mutable parseExpression = Unchecked.defaultof<Parser<Token, UntypedAST.Expression>>
+let (expressionParser: Parser<Expression, unit>, expressionParserRef) = createParserForwardedToRef ()
 
-let mutable parsePrimitiveExpression = Unchecked.defaultof<Parser<Token, UntypedAST.Expression>>
+let (valueExpressionParser: Parser<Expression, unit>, valueExpressionParserRef) = createParserForwardedToRef ()
 
-let token (f: Token -> 'a option) = //TODO: Make more efficient, do not run f twice
-    Parser<Token>.Token(Func<Token, bool>(fun t -> match f t with
-                                                        | None -> false
-                                                        | Some _ -> true)).Select(Func<Token, 'a>(fun t -> match f t with
-                                                                                                            | Some a -> a
-                                                                                                            | None -> invalidOp "Can never happen"))
+let isSeparator (c: char) = Char.IsWhiteSpace c || c = ';' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':' || c = '#'
 
-let choice (parsers: Parser<Token, 'a> seq) = Parser.OneOf parsers
+let isIdentifierStart (c: char) = (not (isDigit c)) && not (isSeparator c)
 
-let map (parser: Parser<Token, 'a>) (mapper: 'a -> 'b) = parser.Select(Func<'a, 'b>(mapper))
+let isIdentifierContinue (c: char) = not (isSeparator c)
 
-let (<!>) = map
+let identifierOptions = IdentifierOptions(isAsciiIdStart = isIdentifierStart, isAsciiIdContinue = isIdentifierContinue)
 
-let label (lbl: string) (parser: Parser<Token, 'a>) = parser.Labelled lbl
+let identifierParser: Parser<string, unit> = identifier identifierOptions <?> "Identifier"
 
-let map2 (parser1: Parser<Token, 'a>) (parser2: Parser<Token, 'b>) (mapper: 'a -> 'b -> 'c) = Parser.Map(Func<'a, 'b, 'c>(mapper), parser1, parser2)
+let floatLiteralParser: Parser<Literal, unit> = numberLiteral (NumberLiteralOptions.DefaultFloat) "Float literal" |>> fun f -> 
+    match f.IsInteger with
+        | true -> int64 f.String |> IntLiteral
+        | false -> float f.String |> FloatLiteral
 
-let sepBy (parser: Parser<Token, 'a>) (sep: Parser<Token, 'b>) = parser.SeparatedAtLeastOnce sep
+let intLiteralParser = pint64 |>> IntLiteral
 
-let prec (p: unit -> Parser<Token, 'a>) = Parser.Rec(Func<Parser<Token, 'a>>(p))
+let quoteParser = skipChar '"'
 
-let parseStringLiteral = token (fun t ->
-                                    match t.token with
-                                        | StringLiteral str -> Some (UntypedAST.StringLiteral str)
-                                        | _ -> None)
+let stringLiteralParser = quoteParser >>. (manyCharsTill anyChar quoteParser) |>> (fun s -> StringLiteral s) <?> "String literal"
 
-let parseIntLiteral = token (fun t ->
-                                match t.token with
-                                    | IntLiteral i -> Some (UntypedAST.IntLiteral i)
-                                    | _ -> None)
+let literalExpressionParser = choiceL [ stringLiteralParser; floatLiteralParser; intLiteralParser ] "Literal" |>> (fun lit -> LiteralExpression lit) <!> "Literal expression parser"
 
-let parseFloatLiteral = token (fun t ->
-                                match t.token with
-                                    | FloatLiteral f -> Some (UntypedAST.FloatLiteral f)
-                                    | _ -> None)
+let variableExpressionParser = identifierParser |>> VariableExpression <?> "Variable expression" <!> "Variable expression parser"
 
-let parseLiteralExpression = choice [ parseStringLiteral; parseFloatLiteral; parseIntLiteral ] <!> UntypedAST.LiteralExpression |> label "Literal"
+let separatorParser = skipMany1 (skipChar '\n' <|> skipChar ';') <?> "Separator"
 
-let parseIdentifier = token (fun t -> match t.token with
-                                                | Identifier i -> Some i
-                                                | _ -> None)
+let ws = skipMany (pchar ' ' <|> pchar '\t')
 
-let parseVariableExpression = parseIdentifier <!> UntypedAST.VariableExpression
+let openParensParser: Parser<char, unit> = pchar '('
 
-let parseLeftParen = token (fun t -> match t.token with
-                                        | LeftParen -> Some ()
-                                        | _ -> None)
+let closeParensParser: Parser<char, unit> = pchar ')'
 
-let parseRightParen = token (fun t -> match t.token with
-                                        | RightParen -> Some ()
-                                        | _ -> None)
+let groupExpressionParser = between openParensParser closeParensParser expressionParser |>> GroupExpression <?> "Group expression" <!> "Group expression parser"
 
-let parseGroupExpression = parseLeftParen.Then(prec (fun () -> parseValueExpression)).Before(parseRightParen) <!> UntypedAST.GroupExpression
+let typeParser = identifierParser
 
-let parseEqual = token (fun t -> match t.token with
-                                        | Equal -> Some ()
-                                        | _ -> None)
+let equalsParser = pchar '='
 
-let parseSimpleDeclaration = parseIdentifier <!> UntypedAST.Simple
+let simpleDeclarationParser = ws >>. identifierParser .>> ws |>> Simple
 
-let parseColon = token (fun t -> match t.token with
-                                        | Colon -> Some ()
-                                        | _ -> None)
+let annotatedDeclarationParser = ws >>. identifierParser .>> skipChar ':' .>> ws .>>. typeParser .>> ws |>> (fun (name, tp) -> Annotated { varName = name; typeName = tp }) |> attempt
 
-let parseType = parseIdentifier //TODO: Support generics, complex types...
+let declarationParser = annotatedDeclarationParser <|> simpleDeclarationParser
 
-let parseAnnotatedDeclaration = map2 (parseIdentifier.Before parseColon) parseType (fun name tp -> UntypedAST.Annotated { varName = name; typeName = tp }) |> Parser.Try
+let variableDefinitionParser = declarationParser .>> equalsParser .>> ws .>>. valueExpressionParser .>> ws |>> (fun (decl, expr) -> DefineVariableExpression { variableName = decl; value = expr }) <!> "Variable definition parser"
 
-let parseDeclaration = parseAnnotatedDeclaration.Or parseSimpleDeclaration |> label "Variable declaration" //TODO: Declaration with type annotation
+let commaParser = skipChar ','
 
-let parseVariableDefinitionExpression = Parser.Try (map2 (parseDeclaration.Before(parseEqual)) (prec (fun () -> parsePrimitiveExpression)) (fun d e -> UntypedAST.DefineVariableExpression { variableName = d; value = e })) |> label "Variable definition"
+let arrowParser = skipString "->"
 
-let parseSeparator = token (fun t ->
-                            match t.token with
-                                | Separator -> Some ()
-                                | _ -> None)
+let blockParameterParser = ((sepBy (ws >>. declarationParser .>> ws) commaParser) .>> ws .>> arrowParser) |> attempt |> opt <?> "Block parameters" <!> "Block parameter parser"
 
-let parseComma = token (fun t ->
-                            match t.token with
-                                | Comma -> Some ()
-                                | _ -> None)
+let blockParser = skipChar '[' >>. blockParameterParser .>> spaces .>>. (sepEndBy expressionParser separatorParser) .>> spaces .>> skipChar ']' |>> (fun (paramsOpt, exprs) -> BlockExpression { parameters = paramsOpt; body = exprs }) <!> "Block expression parser"
 
-let parseArrow = token (fun t ->
-                            match t.token with
-                                | Arrow -> Some ()
-                                | _ -> None)
+let primitiveExpressionParser = 
+    choiceL [
+        blockParser
+        literalExpressionParser
+        groupExpressionParser
+        variableExpressionParser ] "Primitive expression" <!> "Primitive expression parser"
 
-let parseBlockOpen = token (fun t -> match t.token with
-                                        | BlockOpen -> Some ()
-                                        | _ -> None)
+let functionCallParser = primitiveExpressionParser .>>? ws .>>.? (sepEndBy1 primitiveExpressionParser ws) |>> (fun (first, exprs) -> FunctionCallExpression { func = first; arguments = exprs }) <!> "Function call parser"
 
-let parseBlockClose = token (fun t -> match t.token with
-                                        | BlockClose -> Some ()
-                                        | _ -> None)
-
-let parseExpressions = (prec (fun () -> parseExpression)).SeparatedAndOptionallyTerminated parseSeparator
-
-let parseBlockParameters = (Parser.Try ((parseDeclaration.Separated parseComma).
-                                Before(parseArrow))).Optional() 
-                                <!> (fun parameters -> match parameters.HasValue with
-                                                          | true -> Some (List.ofSeq parameters.Value)
-                                                          | false -> None)
-
-let createBlock (parameters: UntypedAST.Declaration list option) expressions =
-    UntypedAST.BlockExpression { parameters = parameters; body = List.ofSeq expressions }
-
-let parseBlock = (map2 parseBlockParameters (parseSeparator.Optional().Then(parseExpressions)) createBlock).Between (parseBlockOpen, parseBlockClose) |> label "Block"
-
-let pve = prec (fun () -> parsePrimitiveExpression)
-
-//TODO: Rethink parser order so we do not have to backtrack on fun calls
-
-let parseFunCall = map2 pve (pve.AtLeastOnce()) (fun first exprs -> UntypedAST.FunctionCallExpression { func = first; arguments = List.ofSeq exprs }) |> Parser.Try |> label "Function call"
-
-parsePrimitiveExpression <- choice [
-    parseBlock
-    parseLiteralExpression
-    parseVariableExpression
-    parseGroupExpression
-]
-
-parseValueExpression <- choice [
-    parseFunCall
-    parsePrimitiveExpression
-]
-
-parseExpression <- choice [ 
-    parseVariableDefinitionExpression
-    parseValueExpression
-]
+valueExpressionParserRef := choiceL [
+    functionCallParser
+    primitiveExpressionParser
+] "Value expression" <!> "Value expression parser"
 
 
-let programParser = parseExpressions
+let singleExpressionParser = (choiceL [
+    variableDefinitionParser |> attempt
+    valueExpressionParser
+] "Expression" <!> "Expression parser")
 
-let calculatePosition (t: Token) (_: SourcePos) =
-    SourcePos(t.line + t.lineSpan, t.col + t.length)
+expressionParserRef := ws >>? singleExpressionParser .>> ws
 
-let parse (tokens: Token seq) = 
-    let res = programParser.Parse(tokens, Func<Token, SourcePos, SourcePos>(calculatePosition))
-    match res.Success with
-        | true -> Ok res.Value
-        | false -> Error res.Error
+let programParser = spaces >>. sepEndBy expressionParser separatorParser .>> spaces .>> eof
+
+let parse (code: string) = match CharParsers.run programParser code with
+                                | Success (res, a, b) -> Result.Ok res
+                                | Failure (es, e, _) -> Result.Error e

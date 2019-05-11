@@ -5,15 +5,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Config.fs" />
     <Compile Include="TypedAST.fs" />
     <Compile Include="UntypedAST.fs" />
     <Compile Include="Typechecker.fs" />
     <Compile Include="Token.fs" />
     <Compile Include="Parser.fs" />
-    <Compile Include="Tokenizer.fs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FParsec" Version="1.0.3" />
     <PackageReference Include="Pidgin" Version="2.1.0" />
   </ItemGroup>
 

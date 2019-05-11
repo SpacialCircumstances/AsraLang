@@ -1,6 +1,5 @@
 ﻿open System
 open System.IO
-open Tokenizer
 open Parser
 open Typechecker
 
@@ -8,9 +7,8 @@ open Typechecker
 let main argv =
     let inFile = argv.[0]
     let outFile = argv.[1]
-    let ast = File.ReadAllText inFile 
-                |> tokenizer
-                |> parse
+    let ast = File.ReadAllText inFile |> parse
+
     match ast with
         | Error e -> printfn "%A" e
         | Ok ast ->
