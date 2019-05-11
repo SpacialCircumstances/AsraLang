@@ -25,7 +25,7 @@ let isIdentifierContinue (c: char) = not (isSeparator c)
 
 let identifierOptions = IdentifierOptions(isAsciiIdStart = isIdentifierStart, isAsciiIdContinue = isIdentifierContinue)
 
-let identifierParser: Parser<string, unit> = identifier identifierOptions
+let identifierParser: Parser<string, unit> = identifier identifierOptions <?> "Identifier"
 
 let floatLiteralParser: Parser<Literal, unit> = numberLiteral (NumberLiteralOptions.DefaultFloat) "Float literal" |>> fun f -> 
     match f.IsInteger with
@@ -36,13 +36,13 @@ let intLiteralParser = pint64 |>> IntLiteral
 
 let quoteParser = skipChar '"'
 
-let stringLiteralParser = quoteParser >>. (manyCharsTill anyChar quoteParser) |>> (fun s -> StringLiteral s)
+let stringLiteralParser = quoteParser >>. (manyCharsTill anyChar quoteParser) |>> (fun s -> StringLiteral s) <?> "String literal"
 
-let literalExpressionParser = choice [ stringLiteralParser; floatLiteralParser; intLiteralParser ] |>> (fun lit -> LiteralExpression lit) <!> "Literal expression parser"
+let literalExpressionParser = choiceL [ stringLiteralParser; floatLiteralParser; intLiteralParser ] "Literal" |>> (fun lit -> LiteralExpression lit) <!> "Literal expression parser"
 
-let variableExpressionParser = identifierParser |>> VariableExpression <!> "Variable expression parser"
+let variableExpressionParser = identifierParser |>> VariableExpression <?> "Variable expression" <!> "Variable expression parser"
 
-let separatorParser = skipMany1 (skipChar '\n' <|> skipChar ';')
+let separatorParser = skipMany1 (skipChar '\n' <|> skipChar ';') <?> "Separator"
 
 let ws = skipMany (pchar ' ' <|> pchar '\t')
 
@@ -50,7 +50,7 @@ let openParensParser: Parser<char, unit> = pchar '('
 
 let closeParensParser: Parser<char, unit> = pchar ')'
 
-let groupExpressionParser = between openParensParser closeParensParser expressionParser |>> GroupExpression <!> "Group expression parser"
+let groupExpressionParser = between openParensParser closeParensParser expressionParser |>> GroupExpression <?> "Group expression" <!> "Group expression parser"
 
 let typeParser = identifierParser
 
@@ -68,29 +68,29 @@ let commaParser = skipChar ','
 
 let arrowParser = skipString "->"
 
-let blockParameterParser = ((sepBy (ws >>. declarationParser .>> ws) commaParser) .>> ws .>> arrowParser) |> attempt |> opt <!> "Block parameter parser"
+let blockParameterParser = ((sepBy (ws >>. declarationParser .>> ws) commaParser) .>> ws .>> arrowParser) |> attempt |> opt <?> "Block parameters" <!> "Block parameter parser"
 
 let blockParser = skipChar '[' >>. blockParameterParser .>> spaces .>>. (sepEndBy expressionParser separatorParser) .>> spaces .>> skipChar ']' |>> (fun (paramsOpt, exprs) -> BlockExpression { parameters = paramsOpt; body = exprs }) <!> "Block expression parser"
 
 let primitiveExpressionParser = 
-    choice [
+    choiceL [
         blockParser
         literalExpressionParser
         groupExpressionParser
-        variableExpressionParser ] <!> "Primitive expression parser"
+        variableExpressionParser ] "Primitive expression" <!> "Primitive expression parser"
 
 let functionCallParser = primitiveExpressionParser .>>? ws .>>.? (sepEndBy1 primitiveExpressionParser ws) |>> (fun (first, exprs) -> FunctionCallExpression { func = first; arguments = exprs }) <!> "Function call parser"
 
-valueExpressionParserRef := choice [
+valueExpressionParserRef := choiceL [
     functionCallParser
     primitiveExpressionParser
-] <!> "Value expression parser"
+] "Value expression" <!> "Value expression parser"
 
 
-let singleExpressionParser = (choice [
+let singleExpressionParser = (choiceL [
     variableDefinitionParser |> attempt
     valueExpressionParser
-] <!> "Expression parser")
+] "Expression" <!> "Expression parser")
 
 expressionParserRef := ws >>? singleExpressionParser .>> ws
 
