@@ -5,11 +5,13 @@ open UntypedAST
 open System
 
 let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
-    fun stream ->
-        System.Diagnostics.Debug.WriteLine (sprintf "%A: Entering %s" stream.Position label)
-        let reply = p stream
-        System.Diagnostics.Debug.WriteLine (sprintf "%A: Leaving %s (%A)" stream.Position label reply.Status)
-        reply
+    if Config.currentConfig.parserTracing then
+        fun stream ->
+            System.Diagnostics.Debug.WriteLine (sprintf "%A: Entering %s" stream.Position label)
+            let reply = p stream
+            System.Diagnostics.Debug.WriteLine (sprintf "%A: Leaving %s (%A)" stream.Position label reply.Status)
+            reply
+    else p
 
 let (expressionParser: Parser<Expression, unit>, expressionParserRef) = createParserForwardedToRef ()
 
@@ -38,7 +40,7 @@ let stringLiteralParser = quoteParser >>. (manyCharsTill anyChar quoteParser) |>
 
 let literalExpressionParser = choice [ stringLiteralParser; floatLiteralParser; intLiteralParser ] |>> (fun lit -> LiteralExpression lit) <!> "Literal expression parser"
 
-let variableExpressionParser = identifierParser |>> VariableExpression
+let variableExpressionParser = identifierParser |>> VariableExpression <!> "Variable expression parser"
 
 let separatorParser = skipMany1 (skipChar '\n' <|> skipChar ';')
 
@@ -48,7 +50,7 @@ let openParensParser: Parser<char, unit> = pchar '('
 
 let closeParensParser: Parser<char, unit> = pchar ')'
 
-let groupExpressionParser = between openParensParser closeParensParser expressionParser |>> GroupExpression
+let groupExpressionParser = between openParensParser closeParensParser expressionParser |>> GroupExpression <!> "Group expression parser"
 
 let typeParser = identifierParser
 
@@ -66,7 +68,7 @@ let commaParser = skipChar ','
 
 let arrowParser = skipString "->"
 
-let blockParameterParser = ((sepBy (ws >>. declarationParser .>> ws) commaParser) .>> ws .>> arrowParser) |> attempt |> opt
+let blockParameterParser = ((sepBy (ws >>. declarationParser .>> ws) commaParser) .>> ws .>> arrowParser) |> attempt |> opt <!> "Block parameter parser"
 
 let blockParser = skipChar '[' >>. blockParameterParser .>> spaces .>>. (sepEndBy expressionParser separatorParser) .>> spaces .>> skipChar ']' |>> (fun (paramsOpt, exprs) -> BlockExpression { parameters = paramsOpt; body = exprs }) <!> "Block expression parser"
 
@@ -85,10 +87,10 @@ valueExpressionParserRef := choice [
 ] <!> "Value expression parser"
 
 
-let singleExpressionParser = choice [
+let singleExpressionParser = (choice [
     variableDefinitionParser |> attempt
     valueExpressionParser
-]
+] <!> "Expression parser")
 
 expressionParserRef := ws >>? singleExpressionParser .>> ws
 
