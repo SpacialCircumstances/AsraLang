@@ -207,3 +207,17 @@ let ``Block with parameters`` () =
         
     ]
     isOk parsed (fun result -> astMatch expected result)
+
+[<Fact>]
+let ``Parsing with comments`` () =
+    let input = """
+    #asdf
+    test = 42 # foo bar 42; single line comment
+    fooBar = "test" 
+    """
+    let parsed = Parser.parse input
+    let expected = [
+        DefineVariableExpression { variableName = Simple "test"; value = (LiteralExpression (IntLiteral 42L)) }
+        DefineVariableExpression { variableName = Simple "fooBar"; value = (LiteralExpression (StringLiteral "test")) }
+    ]
+    isOk parsed (fun result -> astMatch expected result)

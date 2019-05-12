@@ -42,7 +42,9 @@ let literalExpressionParser = choiceL [ stringLiteralParser; floatLiteralParser;
 
 let variableExpressionParser = identifierParser |>> VariableExpression <?> "Variable expression" <!> "Variable expression parser"
 
-let separatorParser = skipMany1 (skipChar '\n' <|> skipChar ';') <?> "Separator"
+let commentParser: Parser<unit, unit> = skipChar '#' >>. (skipManyTill anyChar (skipNewline <|> eof)) <!> "Comment parser"
+
+let separatorParser = skipMany1 (skipChar '\n' <|> skipChar ';' <|> commentParser) <!> "Separator parser" <?> "Separator"
 
 let ws = skipMany (pchar ' ' <|> pchar '\t')
 
@@ -94,7 +96,7 @@ let singleExpressionParser = (choiceL [
 
 expressionParserRef := ws >>? singleExpressionParser .>> ws
 
-let programParser = spaces >>. sepEndBy expressionParser separatorParser .>> spaces .>> eof
+let programParser =  spaces >>. (opt commentParser) >>. spaces >>. sepEndBy expressionParser separatorParser .>> spaces .>> eof
 
 let parse (code: string) = match CharParsers.run programParser code with
                                 | Success (res, a, b) -> Result.Ok res
