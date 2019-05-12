@@ -15,7 +15,7 @@ let main argv =
         | Ok ast ->
             let externs = []
             let typedAst, _ = typecheck ast externs
-            let jsGen = genState "" externs
+            let jsGen = genState (File.ReadAllText Config.currentConfig.preludePath) externs
             let generatedJs = generateJs jsGen typedAst
             if (File.Exists outFile) then File.Delete outFile
             File.WriteAllText (outFile, generatedJs)
