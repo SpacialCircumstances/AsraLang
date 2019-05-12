@@ -3,6 +3,7 @@ open System.IO
 open Parser
 open Typechecker
 open JsGenerator
+open TypedAST
 
 [<EntryPoint>]
 let main argv =
@@ -13,7 +14,9 @@ let main argv =
     match ast with
         | Error e -> printfn "%A" e
         | Ok ast ->
-            let externs = []
+            let externs = [
+                { asraName = "println"; asraType = genFunType [ Native "String" ] (Native "Unit"); externName = "println" }
+            ]
             let typedAst, _ = typecheck ast externs
             let jsGen = genState (File.ReadAllText Config.currentConfig.preludePath) externs
             let generatedJs = generateJs jsGen typedAst
