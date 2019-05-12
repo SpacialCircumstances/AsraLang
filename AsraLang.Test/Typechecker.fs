@@ -24,7 +24,7 @@ let ``Variable declaration`` () =
             value = LiteralExpression (StringLiteral "test")
         }
     ]
-    let typedAst, ctx = Typechecker.typecheck ast
+    let typedAst, ctx = Typechecker.typecheck ast []
     Assert.Equal(ast.Length, Seq.length typedAst)
     assertContextContains ctx "a" (T.Native "Int")
     assertContextContains ctx "b" (T.Native "String")

@@ -3,6 +3,12 @@
 module U = UntypedAST
 module T = TypedAST
 
+type Extern = {
+    asraName: string
+    asraType: T.AType
+    externName: string
+}
+
 type Error = {
     message: string
 }
@@ -80,6 +86,9 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                     let tblock: T.Block = { parameters = typedParams; body = tbody; blockType = bt }
                     T.BlockExpression tblock, state
 
-let typecheck (program: U.Expression seq) =
-    let init = { context = Map.ofList [ "println", T.genFunType [ T.Native "String" ] (T.Native "Unit") ]; types = Map.empty }
+let typecheck (program: U.Expression seq) (externs: Extern list) =
+    let init = { 
+        context = Map.ofList (List.map (fun ext -> ext.asraName, ext.asraType) externs); 
+        types = Map.empty 
+    }
     Seq.mapFold typeExpr init program
