@@ -28,7 +28,11 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expressi
                 | LiteralValue.String str -> writer.Append(sprintf "\"%s\"" str)
                 | LiteralValue.Int i -> writer.Append i
                 | LiteralValue.Float f -> writer.Append(Convert.ToString(f, CultureInfo.InvariantCulture))
-
+        | VariableExpression (var, _) -> writer.Append(var)
+        | GroupExpression expr -> 
+            writer.Append("(") |> ignore
+            writeJs state writer expr |> ignore
+            writer.Append(")")
         | _ -> raise (NotImplementedException())
 
 let generateJs (state: GenerationState) (ast: Expression seq) =
