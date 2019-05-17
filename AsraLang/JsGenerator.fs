@@ -27,7 +27,7 @@ let rec private writeArguments (writeJs: StringBuilder -> Expression -> StringBu
 let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expression) =
     match expr with
         | VariableBindingExpression binding ->
-            do writer.Append (sprintf "let %s = " binding.varName) |> ignore
+            do writer.Append (sprintf "const %s = " binding.varName) |> ignore
             do writeJs state writer binding.value |> ignore
             do writer.AppendLine ";" |> ignore
             writer
