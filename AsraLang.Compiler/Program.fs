@@ -16,6 +16,10 @@ let main argv =
         | Ok ast ->
             let externs = [
                 { asraName = "println"; asraType = genFunType [ Native "String" ] (Native "Unit"); externName = "println" }
+                { asraName = "+"; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Int"); externName = "add" }
+                { asraName = "-"; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Int"); externName = "subtract" }
+                { asraName = "*"; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Int"); externName = "multiply" }
+                { asraName = "/"; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Int"); externName = "divide" }
             ]
             let typedAst, _ = typecheck ast externs
             let jsGen = genState (File.ReadAllText Config.currentConfig.preludePath) externs
