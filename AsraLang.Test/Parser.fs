@@ -3,11 +3,15 @@
 open Xunit
 open UntypedAST
 
-let astMatch (expected: Expression seq) (got: Expression seq) =
-    if Seq.length expected <> Seq.length got then
-        Assert.True (false, sprintf "Expected length: %i, but got: %i" (Seq.length expected) (Seq.length got))
-    else
-        Seq.iter2 (fun (e: Expression) (g: Expression) -> Assert.Equal(e, g)) expected got
+let astMatch (expected: Expression seq) (got: Expression) =
+    match got with
+        | BlockExpression bl ->
+            let got = bl.body
+            if Seq.length expected <> Seq.length got then
+                Assert.True (false, sprintf "Expected length: %i, but got: %i" (Seq.length expected) (Seq.length got))
+            else
+                Seq.iter2 (fun (e: Expression) (g: Expression) -> Assert.Equal(e, g)) expected got
+        | _ -> invalidOp "Parser needs to return one top-level block"
 
 let isOk (result: Result<'a, 'b>) (f: 'a -> unit) = 
     let ok = match result with

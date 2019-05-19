@@ -86,9 +86,9 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                     let tblock: T.Block = { parameters = typedParams; body = tbody; blockType = bt }
                     T.BlockExpression tblock, state
 
-let typecheck (program: U.Expression seq) (externs: Extern list) =
+let typecheck (program: U.Expression) (externs: Extern list) =
     let init = { 
         context = Map.ofList (List.map (fun ext -> ext.asraName, ext.asraType) externs); 
         types = Map.empty 
     }
-    Seq.mapFold typeExpr init program
+    typeExpr init program

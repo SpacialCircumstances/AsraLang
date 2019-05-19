@@ -96,7 +96,7 @@ let singleExpressionParser = (choiceL [
 
 expressionParserRef := ws >>? singleExpressionParser .>> ws
 
-let programParser =  spaces >>. (opt commentParser) >>. spaces >>. sepEndBy expressionParser separatorParser .>> spaces .>> eof
+let programParser =  spaces >>. (opt commentParser) >>. spaces >>. sepEndBy expressionParser separatorParser .>> spaces .>> eof |>> (fun exprs -> BlockExpression { parameters = None; body = exprs  })
 
 let parse (code: string) = match CharParsers.run programParser code with
                                 | Success (res, a, b) -> Result.Ok res

@@ -62,6 +62,6 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expressi
             writer
         | _ -> raise (NotImplementedException())
 
-let generateJs (state: GenerationState) (ast: Expression seq) =
+let generateJs (state: GenerationState) (ast: Expression) =
     let sb = StringBuilder().Append(state.prelude)
-    (Seq.fold (writeJs state) sb ast).ToString ()
+    (writeJs state sb ast).ToString ()
