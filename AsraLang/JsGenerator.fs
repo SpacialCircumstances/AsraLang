@@ -24,12 +24,18 @@ let rec private writeArguments (writeJs: StringBuilder -> Expression -> StringBu
             writer.Append(", ") |> ignore
             writeArguments writeJs writer head (List.tail rest)
 
+let writeBlockBody (writeJs: StringBuilder -> Expression -> StringBuilder) (block: Block) (writer: StringBuilder) =
+    List.iter (fun (expr, _) ->
+        writeJs writer expr |> ignore
+        writer.AppendLine(";") |> ignore
+    ) block.body
+    writer
+
 let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expression) =
     match expr with
         | VariableBindingExpression binding ->
             do writer.Append (sprintf "const %s = " binding.varName) |> ignore
             do writeJs state writer binding.value |> ignore
-            do writer.AppendLine ";" |> ignore
             writer
         | LiteralExpression lit ->
             match lit.literalValue with
@@ -64,4 +70,7 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expressi
 
 let generateJs (state: GenerationState) (ast: Expression) =
     let sb = StringBuilder().Append(state.prelude)
-    (writeJs state sb ast).ToString ()
+    match ast with
+        | BlockExpression block ->
+            (writeBlockBody (writeJs state) block sb).ToString ()
+        | _ -> invalidOp "AST must be a top-level block node"
