@@ -9,6 +9,9 @@
     <None Include="Prelude\prelude.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Examples\math.asra">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Examples\helloworld.asra" />
     <Compile Include="Program.fs" />
   </ItemGroup>

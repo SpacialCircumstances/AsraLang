@@ -53,12 +53,13 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expressi
                     writeJs state writer funCall.func |> ignore
                     writer.Append ")" |> ignore
                 | _ -> invalidOp "Invalid expression for function call"
-            writer.Append "(" |> ignore
             let args = List.map (fun (e, _) -> e) funCall.args
-            if not (List.isEmpty args) then
-                writeArguments (writeJs state) writer (List.head args) (List.tail args)
-            else ()
-            writer.AppendLine ");"
+            List.iter (fun a ->
+                writer.Append "(" |> ignore
+                writeJs state writer a |> ignore
+                writer.Append ")" |> ignore
+            ) args
+            writer
         | _ -> raise (NotImplementedException())
 
 let generateJs (state: GenerationState) (ast: Expression seq) =
