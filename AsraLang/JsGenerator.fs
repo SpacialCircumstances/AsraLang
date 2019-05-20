@@ -51,14 +51,7 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expressi
             writeJs state writer expr |> ignore
             writer.Append(")")
         | FunctionCallExpression funCall ->
-            match funCall.func with
-                | VariableExpression _ ->
-                    writeJs state writer funCall.func |> ignore
-                | BlockExpression _ ->
-                    writer.Append "(" |> ignore
-                    writeJs state writer funCall.func |> ignore
-                    writer.Append ")" |> ignore
-                | _ -> invalidOp "Invalid expression for function call"
+            writeJs state writer funCall.func |> ignore
             let args = List.map (fun (e, _) -> e) funCall.args
             List.iter (fun a ->
                 writer.Append "(" |> ignore
