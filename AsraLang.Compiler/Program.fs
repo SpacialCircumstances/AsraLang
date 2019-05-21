@@ -20,6 +20,12 @@ let main argv =
                 { asraName = "-"; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Int"); externName = "subtract" }
                 { asraName = "*"; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Int"); externName = "multiply" }
                 { asraName = "/"; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Int"); externName = "divide" }
+                { asraName = "if"; asraType = genFunType [
+                    genFunType [ Native "Unit" ] (Native "Bool")
+                    genFunType [ Native "Unit" ] (Native "Unit")
+                    genFunType [ Native "Unit" ] (Native "Unit")
+                ] (Native "Unit"); externName = "iffn" }
+                { asraName = "=="; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Bool"); externName = "eq" }
             ]
             let typedAst, _ = typecheck ast externs
             let jsGen = genState (File.ReadAllText Config.currentConfig.preludePath) externs
