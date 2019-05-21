@@ -59,7 +59,13 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expressi
                 writer.Append ")" |> ignore
             ) args
             writer
-        | _ -> raise (NotImplementedException())
+        | BlockExpression block ->
+            if List.isEmpty block.parameters then
+                writer.Append "()" |> ignore
+            else ()
+            writer.AppendLine "=> {" |> ignore
+            writeBlockBody (writeJs state) block writer |> ignore
+            writer.AppendLine "}"
 
 let generateJs (state: GenerationState) (ast: Expression) =
     let sb = StringBuilder().Append(state.prelude)
