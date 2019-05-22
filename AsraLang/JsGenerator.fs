@@ -61,9 +61,14 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expressi
             writer
         | BlockExpression block ->
             if List.isEmpty block.parameters then
-                writer.Append "()" |> ignore
-            else ()
-            writer.AppendLine "=> {" |> ignore
+                writer.Append "() =>" |> ignore
+            else 
+                List.iter (fun (name: string, _) -> 
+                    writer.Append "(" |> ignore
+                    writer.Append(name) |> ignore
+                    writer.Append ") =>" |> ignore
+                ) block.parameters
+            writer.AppendLine "{" |> ignore
             writeBlockBody (writeJs state) block writer |> ignore
             writer.AppendLine "}"
 
