@@ -26,6 +26,10 @@ let main argv =
                     genFunType [ Native "Unit" ] (Native "Unit")
                 ] (Native "Unit"); externName = "iffn" }
                 { asraName = "=="; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Bool"); externName = "eq" }
+                { asraName = "!="; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Bool"); externName = "neq" }
+                { asraName = "not"; asraType = genFunType [ Native "Bool" ] (Native "Bool"); externName = "not" }
+                { asraName = "&"; asraType = genFunType [ Native "Bool"; Native "Bool" ] (Native "Bool"); externName = "and" }
+                { asraName = "|"; asraType = genFunType [ Native "Bool"; Native "Bool" ] (Native "Bool"); externName = "or" }
             ]
             let typedAst, _ = typecheck ast externs
             let jsGen = genState (File.ReadAllText Config.currentConfig.preludePath) externs

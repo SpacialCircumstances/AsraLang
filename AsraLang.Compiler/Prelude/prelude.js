@@ -11,3 +11,7 @@ const iffn = (cond) => (itrue) => (ifalse) => {
     }
 }
 const eq = (a) => (b) => a === b;
+const not = (a) => !a;
+const neq = (a) => (b) => a !== b;
+const and = (a) => (b) => a && b;
+const or = (a) => (b) => a || b;
