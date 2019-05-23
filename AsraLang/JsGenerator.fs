@@ -24,12 +24,24 @@ let rec private writeArguments (writeJs: StringBuilder -> Expression -> StringBu
             writer.Append(", ") |> ignore
             writeArguments writeJs writer head (List.tail rest)
 
-let writeBlockBody (writeJs: StringBuilder -> Expression -> StringBuilder) (block: Block) (writer: StringBuilder) =
-    List.iter (fun (expr, _) ->
-        writeJs writer expr |> ignore
-        writer.AppendLine(";") |> ignore
-    ) block.body
-    writer
+let rec writeBlockBody (writeJs: StringBuilder -> Expression -> StringBuilder) (block: Block) (writer: StringBuilder) (doesReturn: bool) =
+    match doesReturn with
+        | false ->
+            List.iter (fun (expr, _) ->
+                writeJs writer expr |> ignore
+                writer.AppendLine(";") |> ignore
+            ) block.body
+            writer
+        | true ->
+            let noReturnExpressions = block.body.[ 0..(List.length block.body - 1) ]
+            List.iter (fun (expr, _) ->
+                writeJs writer expr |> ignore
+                writer.AppendLine(";") |> ignore
+            ) noReturnExpressions
+            writer.Append "return " |> ignore
+            let last, _ = (List.last block.body)
+            writeJs writer last |> ignore
+            writer.AppendLine ";"
 
 let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expression) =
     match expr with
@@ -69,12 +81,13 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expressi
                     writer.Append ") =>" |> ignore
                 ) block.parameters
             writer.AppendLine "{" |> ignore
-            writeBlockBody (writeJs state) block writer |> ignore
+            let returns = block.returnType <> (Native "Unit")
+            writeBlockBody (writeJs state) block writer returns |> ignore
             writer.AppendLine "}"
 
 let generateJs (state: GenerationState) (ast: Expression) =
     let sb = StringBuilder().Append(state.prelude)
     match ast with
         | BlockExpression block ->
-            (writeBlockBody (writeJs state) block sb).ToString ()
+            (writeBlockBody (writeJs state) block sb false).ToString ()
         | _ -> invalidOp "AST must be a top-level block node"

@@ -45,6 +45,7 @@ and Block = {
     parameters: (string * AType) list
     body: (Expression * AType) list
     blockType: AType
+    returnType: AType
 }
 
 and Expression =
