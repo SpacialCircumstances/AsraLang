@@ -2,9 +2,10 @@
 
 open UntypedAST
 open Xunit
+open Types
 module T = TypedAST
 
-let assertContextContains (state: Typechecker.State) (name: string) (atype: T.AType) =
+let assertContextContains (state: Typechecker.State) (name: string) (atype: AType) =
     match Map.tryFind name state.context with
         | None -> Assert.True(false, sprintf "Variable %s not found" name)
         | Some tp -> Assert.Equal(atype, tp)

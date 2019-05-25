@@ -4,6 +4,7 @@ open Parser
 open Typechecker
 open JsGenerator
 open TypedAST
+open Types
 
 [<EntryPoint>]
 let main argv =

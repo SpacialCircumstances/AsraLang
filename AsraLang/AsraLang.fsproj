@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <Compile Include="Config.fs" />
+    <Compile Include="Types.fs" />
     <Compile Include="TypedAST.fs" />
     <Compile Include="UntypedAST.fs" />
     <Compile Include="Typechecker.fs" />

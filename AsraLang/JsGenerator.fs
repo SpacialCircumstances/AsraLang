@@ -2,6 +2,7 @@
 
 open System.Text
 open TypedAST
+open Types
 open Typechecker
 open System
 open System.Globalization

@@ -1,6 +1,7 @@
 ﻿module Types
 
 open TypedAST
+open Types
 open Xunit
 
 let assertEqResult (expected: 'a) (got: Result<'a, 'b>) =
