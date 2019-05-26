@@ -20,7 +20,6 @@ type VariableBinding = {
 
 and FunctionCall = {
     func: Expression
-    funcType: AType
     args: Expression list
     returnType: AType
 }
@@ -29,7 +28,6 @@ and Block = {
     parameters: string list
     body: Expression list
     blockType: AType
-    returnType: AType
 }
 
 and Expression =

@@ -33,6 +33,14 @@ let rec returnType (funcT: AType) (paramTs: AType list): Result<AType, string> =
                     else
                         sprintf "Expected type: %A, but got %A instead" t.input pt |> Error
 
+let rec appliedType (funcT: AType) (paramsCount: int) =
+    if paramsCount = 0 then
+        Some funcT
+    else
+        match funcT with
+            | Native i -> None
+            | FunctionType ft -> appliedType ft.output (paramsCount - 1)
+
 let rec genFunType (paramTypes: AType list) (retType: AType) = 
     match paramTypes with
         | [] -> FunctionType { input = Native "Unit"; output = retType }

@@ -60,7 +60,7 @@ let rec typeExpr (state: State) (expr: U.Expression) =
             let funType = T.getType funExp
             match returnType funType (List.map T.getType args) with
                 | Ok retType ->
-                    let call: T.FunctionCall = { func = funExp; funcType = funType; args = args; returnType = retType }
+                    let call: T.FunctionCall = { func = funExp; args = args; returnType = retType }
                     T.FunctionCallExpression call, state
                 | Error e -> invalidOp e
         | U.BlockExpression block ->
@@ -69,7 +69,7 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                     let body, _ = List.mapFold typeExpr state block.body
                     let rt = T.getType (List.last body)
                     let bt = genFunType [] rt
-                    let tblock: T.Block = { parameters = []; body = body; blockType = bt; returnType = rt }
+                    let tblock: T.Block = { parameters = []; body = body; blockType = bt }
                     T.BlockExpression tblock, state
                 | Some parameters ->
                     let typedParams = List.map (fun d -> match d with
@@ -80,7 +80,7 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                     let body, _ = List.mapFold typeExpr blockState block.body
                     let rt = T.getType (List.last body)
                     let bt = genFunType (List.map T.getType body) rt
-                    let tblock: T.Block = { parameters = (List.map fst typedParams); body = body; blockType = bt; returnType = rt }
+                    let tblock: T.Block = { parameters = (List.map fst typedParams); body = body; blockType = bt }
                     T.BlockExpression tblock, state
 
 let typecheck (program: U.Expression) (externs: Extern list) =

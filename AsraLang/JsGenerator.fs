@@ -81,7 +81,9 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expressi
                     writer.Append ") =>" |> ignore
                 ) block.parameters
             writer.AppendLine "{" |> ignore
-            let returns = block.returnType <> (Native "Unit")
+            let returns = match appliedType block.blockType (List.length block.parameters) with
+                                | Some (Native "Unit") -> false
+                                | _ -> true
             writeBlockBody (writeJs state) block writer returns |> ignore
             writer.AppendLine "}"
 
