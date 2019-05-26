@@ -28,19 +28,19 @@ let rec private writeArguments (writeJs: StringBuilder -> Expression -> StringBu
 let rec writeBlockBody (writeJs: StringBuilder -> Expression -> StringBuilder) (block: Block) (writer: StringBuilder) (doesReturn: bool) =
     match doesReturn with
         | false ->
-            List.iter (fun (expr, _) ->
+            List.iter (fun expr ->
                 writeJs writer expr |> ignore
                 writer.AppendLine(";") |> ignore
             ) block.body
             writer
         | true ->
             let noReturnExpressions = block.body.[ 0..(List.length block.body - 1) ]
-            List.iter (fun (expr, _) ->
+            List.iter (fun expr ->
                 writeJs writer expr |> ignore
                 writer.AppendLine(";") |> ignore
             ) noReturnExpressions
             writer.Append "return " |> ignore
-            let last, _ = (List.last block.body)
+            let last = (List.last block.body)
             writeJs writer last |> ignore
             writer.AppendLine ";"
 
@@ -65,18 +65,17 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expressi
             writer.Append(")")
         | FunctionCallExpression funCall ->
             writeJs state writer funCall.func |> ignore
-            let args = List.map (fun (e, _) -> e) funCall.args
             List.iter (fun a ->
                 writer.Append "(" |> ignore
                 writeJs state writer a |> ignore
                 writer.Append ")" |> ignore
-            ) args
+            ) funCall.args
             writer
         | BlockExpression block ->
             if List.isEmpty block.parameters then
                 writer.Append "() =>" |> ignore
             else 
-                List.iter (fun (name: string, _) -> 
+                List.iter (fun (name: string) -> 
                     writer.Append "(" |> ignore
                     writer.Append(name) |> ignore
                     writer.Append ") =>" |> ignore

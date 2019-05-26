@@ -55,12 +55,10 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                     //TODO: We need error handling
                     invalidOp (sprintf "Variable %s not found" var)
         | U.FunctionCallExpression fc ->
-            let args = List.map (fun a -> 
-                                    let e, _ = typeExpr state a
-                                    e, T.getType e) fc.arguments
+            let args = List.map (fun a -> typeExpr state a |> fst) fc.arguments
             let funExp, _ = typeExpr state fc.func
             let funType = T.getType funExp
-            match returnType funType (List.map (fun (_, t) -> t) args) with
+            match returnType funType (List.map T.getType args) with
                 | Ok retType ->
                     let call: T.FunctionCall = { func = funExp; funcType = funType; args = args; returnType = retType }
                     T.FunctionCallExpression call, state
@@ -69,10 +67,9 @@ let rec typeExpr (state: State) (expr: U.Expression) =
             match block.parameters with
                 | None ->
                     let body, _ = List.mapFold typeExpr state block.body
-                    let tbody = List.map (fun e -> e, T.getType e) body
-                    let _, rt = List.last tbody
+                    let rt = T.getType (List.last body)
                     let bt = genFunType [] rt
-                    let tblock: T.Block = { parameters = []; body = tbody; blockType = bt; returnType = rt }
+                    let tblock: T.Block = { parameters = []; body = body; blockType = bt; returnType = rt }
                     T.BlockExpression tblock, state
                 | Some parameters ->
                     let typedParams = List.map (fun d -> match d with
@@ -81,10 +78,9 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                     let blockContext = List.fold (fun ctx (p, pt) -> Map.add p pt ctx) state.context typedParams
                     let blockState = { state with context = blockContext }
                     let body, _ = List.mapFold typeExpr blockState block.body
-                    let tbody = List.map (fun e -> e, T.getType e) body
-                    let _, rt = List.last tbody
-                    let bt = genFunType (List.map (fun (_, t) -> t) tbody) rt
-                    let tblock: T.Block = { parameters = typedParams; body = tbody; blockType = bt; returnType = rt }
+                    let rt = T.getType (List.last body)
+                    let bt = genFunType (List.map T.getType body) rt
+                    let tblock: T.Block = { parameters = (List.map fst typedParams); body = body; blockType = bt; returnType = rt }
                     T.BlockExpression tblock, state
 
 let typecheck (program: U.Expression) (externs: Extern list) =

@@ -21,13 +21,13 @@ type VariableBinding = {
 and FunctionCall = {
     func: Expression
     funcType: AType
-    args: (Expression * AType) list
+    args: Expression list
     returnType: AType
 }
 
 and Block = {
-    parameters: (string * AType) list
-    body: (Expression * AType) list
+    parameters: string list
+    body: Expression list
     blockType: AType
     returnType: AType
 }
