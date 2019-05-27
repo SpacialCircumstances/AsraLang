@@ -1,6 +1,5 @@
 ﻿module Typechecker
 
-open UntypedAST
 open Xunit
 open Types
 module T = Ast

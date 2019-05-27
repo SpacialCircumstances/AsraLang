@@ -1,6 +1,5 @@
 ﻿module Typechecker
 
-module U = UntypedAST
 module T = Ast
 open Types
 
