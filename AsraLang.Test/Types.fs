@@ -1,6 +1,6 @@
 ﻿module Types
 
-open TypedAST
+open Ast
 open Types
 open Xunit
 

@@ -3,7 +3,7 @@
 open UntypedAST
 open Xunit
 open Types
-module T = TypedAST
+module T = Ast
 
 let assertContextContains (state: Typechecker.State) (name: string) (atype: AType) =
     match Map.tryFind name state.context with

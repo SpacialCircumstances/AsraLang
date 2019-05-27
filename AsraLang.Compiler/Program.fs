@@ -3,7 +3,6 @@ open System.IO
 open Parser
 open Typechecker
 open JsGenerator
-open TypedAST
 open Types
 
 [<EntryPoint>]
