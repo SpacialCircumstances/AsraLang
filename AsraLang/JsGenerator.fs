@@ -47,7 +47,7 @@ let rec writeBlockBody (writeJs: StringBuilder -> TypedExpression -> StringBuild
 let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: TypedExpression) =
     match expr with
         | VariableBindingExpression binding ->
-            do writer.Append (sprintf "const %s = " binding.varName) |> ignore
+            do writer.Append (sprintf "const %s = " (toVarName binding.varName)) |> ignore
             do writeJs state writer binding.value |> ignore
             writer
         | LiteralExpression lit ->
@@ -75,13 +75,13 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: TypedExp
             if List.isEmpty block.parameters then
                 writer.Append "() =>" |> ignore
             else 
-                List.iter (fun (name: string) -> 
+                List.iter (fun (name: Declaration) -> 
                     writer.Append "(" |> ignore
-                    writer.Append(name) |> ignore
+                    writer.Append(toVarName name) |> ignore
                     writer.Append ") =>" |> ignore
                 ) block.parameters
             writer.AppendLine "{" |> ignore
-            let returns = match appliedType block.blockType (List.length block.parameters) with
+            let returns = match appliedType block.data (List.length block.parameters) with
                                 | Some (Native "Unit") -> false
                                 | _ -> true
             writeBlockBody (writeJs state) block writer returns |> ignore

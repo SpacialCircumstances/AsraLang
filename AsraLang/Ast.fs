@@ -10,8 +10,21 @@ type Literal<'data> = {
     literalValue: LiteralValue
 }
 
-type VariableBinding<'data> = {
+type TypeAnnotated = { //TODO: Support complex types
+    typeName: string
     varName: string
+}
+
+type Declaration = 
+    | Simple of string
+    | Annotated of TypeAnnotated
+
+let toVarName (decl: Declaration) = match decl with
+                                        | Simple s -> s
+                                        | Annotated ta -> ta.varName
+
+type VariableBinding<'data> = {
+    varName: Declaration
     varData: 'data
     value: Expression<'data>
 }
@@ -23,9 +36,9 @@ and FunctionCall<'data> = {
 }
 
 and Block<'data> = {
-    parameters: string list
+    parameters: Declaration list
     body: Expression<'data> list
-    blockType: 'data
+    data: 'data
 }
 
 and Expression<'data> =
@@ -46,5 +59,5 @@ let rec getType (expr: TypedExpression) =
         | VariableBindingExpression bind -> bind.varData
         | FunctionCallExpression fc -> fc.data
         | VariableExpression (_ , t) -> t
-        | BlockExpression block -> block.blockType
+        | BlockExpression block -> block.data
         | GroupExpression expr -> getType expr
