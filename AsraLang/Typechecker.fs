@@ -1,7 +1,7 @@
 ﻿module Typechecker
 
 module U = UntypedAST
-module T = TypedAST
+module T = Ast
 open Types
 
 type Extern = {
@@ -31,7 +31,7 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                                         T.Int i, Native "Int"
                                     | U.FloatLiteral f ->
                                         T.Float f, Native "Float"
-            T.LiteralExpression { atype = litType; literalValue = literal }, state
+            T.LiteralExpression { data = litType; literalValue = literal }, state
         | U.GroupExpression e ->
             let subExpr, newState = typeExpr state e
             T.GroupExpression subExpr, newState
@@ -41,7 +41,7 @@ let rec typeExpr (state: State) (expr: U.Expression) =
             let name = match def.variableName with
                         | U.Simple s -> s
                         | U.Annotated a -> a.varName
-            let binding: T.VariableBinding = { varName = name; varType = valueType; value = result }
+            let binding: T.VariableBinding<AType> = { varName = name; varData = valueType; value = result }
             let newContext = Map.add name valueType state.context
             //TODO: Check type annotation if it matches
             let newState = { state with context = newContext }
@@ -60,7 +60,7 @@ let rec typeExpr (state: State) (expr: U.Expression) =
             let funType = T.getType funExp
             match returnType funType (List.map T.getType args) with
                 | Ok retType ->
-                    let call: T.FunctionCall = { func = funExp; args = args; returnType = retType }
+                    let call: T.FunctionCall<AType> = { func = funExp; args = args; data = retType }
                     T.FunctionCallExpression call, state
                 | Error e -> invalidOp e
         | U.BlockExpression block ->
@@ -69,7 +69,7 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                     let body, _ = List.mapFold typeExpr state block.body
                     let rt = T.getType (List.last body)
                     let bt = genFunType [] rt
-                    let tblock: T.Block = { parameters = []; body = body; blockType = bt }
+                    let tblock: T.Block<AType> = { parameters = []; body = body; blockType = bt }
                     T.BlockExpression tblock, state
                 | Some parameters ->
                     let typedParams = List.map (fun d -> match d with
@@ -80,7 +80,7 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                     let body, _ = List.mapFold typeExpr blockState block.body
                     let rt = T.getType (List.last body)
                     let bt = genFunType (List.map T.getType body) rt
-                    let tblock: T.Block = { parameters = (List.map fst typedParams); body = body; blockType = bt }
+                    let tblock: T.Block<AType> = { parameters = (List.map fst typedParams); body = body; blockType = bt }
                     T.BlockExpression tblock, state
 
 let typecheck (program: U.Expression) (externs: Extern list) =

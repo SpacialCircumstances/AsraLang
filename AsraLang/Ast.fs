@@ -39,3 +39,12 @@ and Expression<'data> =
 type UntypedExpression = Expression<unit>
 
 type TypedExpression = Expression<Types.AType>
+
+let rec getType (expr: TypedExpression) =
+    match expr with
+        | LiteralExpression lit -> lit.data
+        | VariableBindingExpression bind -> bind.varData
+        | FunctionCallExpression fc -> fc.data
+        | VariableExpression (_ , t) -> t
+        | BlockExpression block -> block.blockType
+        | GroupExpression expr -> getType expr
