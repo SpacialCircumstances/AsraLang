@@ -6,10 +6,11 @@
 
   <ItemGroup>
     <Compile Include="Config.fs" />
-    <Compile Include="TypedAST.fs" />
-    <Compile Include="UntypedAST.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="Ast.fs" />
     <Compile Include="Typechecker.fs" />
     <Compile Include="JsGenerator.fs" />
+    <Compile Include="JsLibrary.fs" />
     <Compile Include="Token.fs" />
     <Compile Include="Parser.fs" />
   </ItemGroup>

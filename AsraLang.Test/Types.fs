@@ -1,6 +1,7 @@
 ﻿module Types
 
-open TypedAST
+open Ast
+open Types
 open Xunit
 
 let assertEqResult (expected: 'a) (got: Result<'a, 'b>) =
@@ -13,56 +14,50 @@ let assertEqResult (expected: 'a) (got: Result<'a, 'b>) =
 
 [<Fact>]
 let ``Call types`` () =
-    let i = Native "Int"
-    let f = Native "Float"
-    let s = Native "String"
     let funcT = FunctionType {
-        input = i;
+        input = aint;
         output = FunctionType {
-            input = i;
+            input = aint;
             output = FunctionType {
-                input = i;
-                output = s;
+                input = aint;
+                output = astring;
             }
         }
     }
-    let p1 = [ i; i ]
-    let p2 = [ i; i; i ]
-    let p3 = [ i; f; s ]
+    let p1 = [ aint; aint ]
+    let p2 = [ aint; aint; aint ]
+    let p3 = [ aint; afloat; astring ]
     let pr1 = FunctionType {
-        input = i;
-        output = s;
+        input = aint;
+        output = astring;
     }
     assertEqResult pr1 (returnType funcT p1)
-    assertEqResult s (returnType funcT p2)
+    assertEqResult astring (returnType funcT p2)
     Assert.True(match returnType funcT p3 with
                 | Error _ -> true
                 | Ok _ -> false)
 
 [<Fact>]
 let ``Block types`` () =
-    let i = Native "Int"
-    let s = Native "String"
-    let f = Native "Float"
     let p1 = [
-        s
+        astring
         FunctionType {
-            input = i;
-            output = s;
+            input = aint;
+            output = astring;
         }
-        i
+        aint
     ]
-    let bt = genFunType p1 f
+    let bt = genFunType p1 afloat
     let expected = FunctionType {
-        input = s;
+        input = astring;
         output = FunctionType {
             input = FunctionType {
-                input = i;
-                output = s;
+                input = aint;
+                output = astring;
             }
             output = FunctionType {
-                input = i;
-                output = f;
+                input = aint;
+                output = afloat;
             }
         }
     }
@@ -70,9 +65,9 @@ let ``Block types`` () =
 
 [<Fact>]
 let ``Type printing`` () =
-    let t1 = Native "String"
-    let t2 = Native "Unit"
-    let t3 = Native "Int"
+    let t1 = astring
+    let t2 = aunit
+    let t3 = aint
     Assert.Equal("String", t1.ToString())
     Assert.Equal("Unit", t2.ToString())
     Assert.Equal("Int", t3.ToString())

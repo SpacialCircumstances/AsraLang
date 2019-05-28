@@ -1,7 +1,8 @@
 ﻿module JsGenerator
 
 open System.Text
-open TypedAST
+open Ast
+open Types
 open Typechecker
 open System
 open System.Globalization
@@ -16,7 +17,7 @@ let genState (prelude: string) (externs: Extern list) = {
     externFunctionsMapper = Map.ofList (List.map (fun ext -> ext.asraName, ext.externName) externs)
 }
 
-let rec private writeArguments (writeJs: StringBuilder -> Expression -> StringBuilder) (writer: StringBuilder) (arg: Expression) (rest: Expression list) =
+let rec private writeArguments (writeJs: StringBuilder -> TypedExpression -> StringBuilder) (writer: StringBuilder) (arg: TypedExpression) (rest: TypedExpression list) =
     writeJs writer arg |> ignore 
     match List.tryHead rest with
         | None -> ()
@@ -24,29 +25,29 @@ let rec private writeArguments (writeJs: StringBuilder -> Expression -> StringBu
             writer.Append(", ") |> ignore
             writeArguments writeJs writer head (List.tail rest)
 
-let rec writeBlockBody (writeJs: StringBuilder -> Expression -> StringBuilder) (block: Block) (writer: StringBuilder) (doesReturn: bool) =
+let rec writeBlockBody (writeJs: StringBuilder -> TypedExpression -> StringBuilder) (block: Block<AType>) (writer: StringBuilder) (doesReturn: bool) =
     match doesReturn with
         | false ->
-            List.iter (fun (expr, _) ->
+            List.iter (fun expr ->
                 writeJs writer expr |> ignore
                 writer.AppendLine(";") |> ignore
             ) block.body
             writer
         | true ->
             let noReturnExpressions = block.body.[ 0..(List.length block.body - 1) ]
-            List.iter (fun (expr, _) ->
+            List.iter (fun expr ->
                 writeJs writer expr |> ignore
                 writer.AppendLine(";") |> ignore
             ) noReturnExpressions
             writer.Append "return " |> ignore
-            let last, _ = (List.last block.body)
+            let last = (List.last block.body)
             writeJs writer last |> ignore
             writer.AppendLine ";"
 
-let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expression) =
+let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: TypedExpression) =
     match expr with
         | VariableBindingExpression binding ->
-            do writer.Append (sprintf "const %s = " binding.varName) |> ignore
+            do writer.Append (sprintf "const %s = " (toVarName binding.varName)) |> ignore
             do writeJs state writer binding.value |> ignore
             writer
         | LiteralExpression lit ->
@@ -64,28 +65,29 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: Expressi
             writer.Append(")")
         | FunctionCallExpression funCall ->
             writeJs state writer funCall.func |> ignore
-            let args = List.map (fun (e, _) -> e) funCall.args
             List.iter (fun a ->
                 writer.Append "(" |> ignore
                 writeJs state writer a |> ignore
                 writer.Append ")" |> ignore
-            ) args
+            ) funCall.args
             writer
         | BlockExpression block ->
             if List.isEmpty block.parameters then
                 writer.Append "() =>" |> ignore
             else 
-                List.iter (fun (name: string, _) -> 
+                List.iter (fun (name: Declaration) -> 
                     writer.Append "(" |> ignore
-                    writer.Append(name) |> ignore
+                    writer.Append(toVarName name) |> ignore
                     writer.Append ") =>" |> ignore
                 ) block.parameters
             writer.AppendLine "{" |> ignore
-            let returns = block.returnType <> (Native "Unit")
+            let returns = match appliedType block.data (List.length block.parameters) with
+                                | Some (Native "Unit") -> false
+                                | _ -> true
             writeBlockBody (writeJs state) block writer returns |> ignore
             writer.AppendLine "}"
 
-let generateJs (state: GenerationState) (ast: Expression) =
+let generateJs (state: GenerationState) (ast: TypedExpression) =
     let sb = StringBuilder().Append(state.prelude)
     match ast with
         | BlockExpression block ->

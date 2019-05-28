@@ -1,11 +1,11 @@
 ﻿module Typechecker
 
-module U = UntypedAST
-module T = TypedAST
+module T = Ast
+open Types
 
 type Extern = {
     asraName: string
-    asraType: T.AType
+    asraType: AType
     externName: string
 }
 
@@ -14,38 +14,38 @@ type Error = {
 }
 
 type State = {
-    context: Map<string, T.AType>
-    types: Map<string, T.AType>
+    context: Map<string, AType>
+    types: Map<string, AType>
 }
 
 let resolveType (state: State) (typeName: string) = Map.find typeName state.types
 
-let rec typeExpr (state: State) (expr: U.Expression) =
+let rec typeExpr (state: State) (expr: T.UntypedExpression) =
     match expr with
-        | U.LiteralExpression lit ->
-            let literal, litType = match lit with
-                                    | U.StringLiteral str ->
-                                        T.String str, T.Native "String"
-                                    | U.IntLiteral i ->
-                                        T.Int i, T.Native "Int"
-                                    | U.FloatLiteral f ->
-                                        T.Float f, T.Native "Float"
-            T.LiteralExpression { atype = litType; literalValue = literal }, state
-        | U.GroupExpression e ->
+        | T.LiteralExpression lit ->
+            let literal, litType = match lit.literalValue with
+                                    | T.LiteralValue.String str ->
+                                        T.String str, astring
+                                    | T.LiteralValue.Int i ->
+                                        T.Int i, aint
+                                    | T.LiteralValue.Float f ->
+                                        T.Float f, afloat
+            T.LiteralExpression { data = litType; literalValue = literal }, state
+        | T.GroupExpression e ->
             let subExpr, newState = typeExpr state e
             T.GroupExpression subExpr, newState
-        | U.DefineVariableExpression def ->
+        | T.VariableBindingExpression def ->
             let result, _ = typeExpr state def.value
             let valueType = T.getType result
-            let name = match def.variableName with
-                        | U.Simple s -> s
-                        | U.Annotated a -> a.varName
-            let binding: T.VariableBinding = { varName = name; varType = valueType; value = result }
+            let name = match def.varName with
+                        | T.Simple s -> s
+                        | T.Annotated a -> a.varName
+            let binding: T.VariableBinding<AType> = { varName = T.Simple name; varData = valueType; value = result }
             let newContext = Map.add name valueType state.context
             //TODO: Check type annotation if it matches
             let newState = { state with context = newContext }
             T.VariableBindingExpression binding, newState
-        | U.VariableExpression var ->
+        | T.VariableExpression (var, _) ->
             let varType = Map.tryFind var state.context
             match varType with
                 | Some varType ->
@@ -53,40 +53,37 @@ let rec typeExpr (state: State) (expr: U.Expression) =
                 | None ->
                     //TODO: We need error handling
                     invalidOp (sprintf "Variable %s not found" var)
-        | U.FunctionCallExpression fc ->
-            let args = List.map (fun a -> 
-                                    let e, _ = typeExpr state a
-                                    e, T.getType e) fc.arguments
+        | T.FunctionCallExpression fc ->
+            let args = List.map (fun a -> typeExpr state a |> fst) fc.args
             let funExp, _ = typeExpr state fc.func
             let funType = T.getType funExp
-            match T.returnType funType (List.map (fun (_, t) -> t) args) with
+            match returnType funType (List.map T.getType args) with
                 | Ok retType ->
-                    let call: T.FunctionCall = { func = funExp; funcType = funType; args = args; returnType = retType }
+                    let call: T.FunctionCall<AType> = { func = funExp; args = args; data = retType }
                     T.FunctionCallExpression call, state
                 | Error e -> invalidOp e
-        | U.BlockExpression block ->
-            match block.parameters with
-                | None ->
+        | T.BlockExpression block ->
+            match List.isEmpty block.parameters with
+                | true ->
                     let body, _ = List.mapFold typeExpr state block.body
-                    let tbody = List.map (fun e -> e, T.getType e) body
-                    let _, rt = List.last tbody
-                    let bt = T.genFunType [] rt
-                    let tblock: T.Block = { parameters = []; body = tbody; blockType = bt; returnType = rt }
+                    let rt = T.getType (List.last body)
+                    let bt = genFunType [] rt
+                    let tblock: T.Block<AType> = { parameters = []; body = body; data = bt }
                     T.BlockExpression tblock, state
-                | Some parameters ->
+                | false ->
+                    let parameters = block.parameters
                     let typedParams = List.map (fun d -> match d with
-                                                            | U.Simple _ -> invalidOp "You need to specify type names in block parameters"
-                                                            | U.Annotated t -> (t.varName, resolveType state t.typeName)) parameters
+                                                            | T.Simple _ -> invalidOp "You need to specify type names in block parameters"
+                                                            | T.Annotated t -> (t.varName, resolveType state t.typeName)) parameters
                     let blockContext = List.fold (fun ctx (p, pt) -> Map.add p pt ctx) state.context typedParams
                     let blockState = { state with context = blockContext }
                     let body, _ = List.mapFold typeExpr blockState block.body
-                    let tbody = List.map (fun e -> e, T.getType e) body
-                    let _, rt = List.last tbody
-                    let bt = T.genFunType (List.map (fun (_, t) -> t) tbody) rt
-                    let tblock: T.Block = { parameters = typedParams; body = tbody; blockType = bt; returnType = rt }
+                    let rt = T.getType (List.last body)
+                    let bt = genFunType (List.map T.getType body) rt
+                    let tblock: T.Block<AType> = { parameters = (List.map (fst >> T.Simple) typedParams); body = body; data = bt }
                     T.BlockExpression tblock, state
 
-let typecheck (program: U.Expression) (externs: Extern list) =
+let typecheck (program: T.UntypedExpression) (externs: Extern list) =
     let init = { 
         context = Map.ofList (List.map (fun ext -> ext.asraName, ext.asraType) externs); 
         types = Map.empty 

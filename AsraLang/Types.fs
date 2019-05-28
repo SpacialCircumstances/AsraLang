@@ -1,4 +1,4 @@
-﻿module TypedAST
+﻿module Types
 
 type FunType = {
     input: AType
@@ -18,52 +18,11 @@ with
                                         | FunctionType ft ->
                                             sprintf "(%O -> %O) -> %O" ft.input ft.output funt.output
 
-type LiteralValue = 
-    | Int of int64
-    | String of string
-    | Float of float
-
-type Literal = {
-    atype: AType
-    literalValue: LiteralValue
-}
-
-type VariableBinding = {
-    varName: string
-    varType: AType
-    value: Expression
-}
-
-and FunctionCall = {
-    func: Expression
-    funcType: AType
-    args: (Expression * AType) list
-    returnType: AType
-}
-
-and Block = {
-    parameters: (string * AType) list
-    body: (Expression * AType) list
-    blockType: AType
-    returnType: AType
-}
-
-and Expression =
-    | LiteralExpression of Literal
-    | VariableBindingExpression of VariableBinding
-    | FunctionCallExpression of FunctionCall
-    | VariableExpression of string * AType
-    | BlockExpression of Block
-    | GroupExpression of Expression
-
-let rec getType (expr: Expression) =
-    match expr with
-        | LiteralExpression lit -> lit.atype
-        | VariableBindingExpression bind -> bind.varType
-        | FunctionCallExpression fc -> fc.returnType
-        | VariableExpression (_ , t) -> t
-        | BlockExpression block -> block.blockType
-        | GroupExpression expr -> getType expr
+let aint = Native "Int"
+let astring = Native "String"
+let aunit = Native "Unit"
+let afloat = Native "Float"
+let abool = Native "Bool"
 
 let rec returnType (funcT: AType) (paramTs: AType list): Result<AType, string> =
     match funcT with
@@ -79,6 +38,14 @@ let rec returnType (funcT: AType) (paramTs: AType list): Result<AType, string> =
                         returnType t.output (List.tail paramTs)
                     else
                         sprintf "Expected type: %A, but got %A instead" t.input pt |> Error
+
+let rec appliedType (funcT: AType) (paramsCount: int) =
+    if paramsCount = 0 then
+        Some funcT
+    else
+        match funcT with
+            | Native i -> None
+            | FunctionType ft -> appliedType ft.output (paramsCount - 1)
 
 let rec genFunType (paramTypes: AType list) (retType: AType) = 
     match paramTypes with
