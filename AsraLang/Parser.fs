@@ -40,9 +40,9 @@ let createParser (data: Parser<'data, unit>) =
     
     let stringLiteralParser = quoteParser >>. (manyCharsTill anyChar quoteParser) |>> (fun s -> LiteralValue.String s) <?> "String literal"
     
-    let literalExpressionParser = choiceL [ stringLiteralParser; floatLiteralParser; intLiteralParser ] "Literal" |>> (fun lit -> LiteralExpression { literalValue = lit; data = () }) <!> "Literal expression parser"
+    let literalExpressionParser = data .>>. choiceL [ stringLiteralParser; floatLiteralParser; intLiteralParser ] "Literal" |>> (fun (data, lit) -> LiteralExpression { literalValue = lit; data = data }) <!> "Literal expression parser"
     
-    let variableExpressionParser = identifierParser |>> (fun s -> VariableExpression (s, ())) <?> "Variable expression" <!> "Variable expression parser"
+    let variableExpressionParser = data .>>. identifierParser |>> (fun (data, s) -> VariableExpression (s, data)) <?> "Variable expression" <!> "Variable expression parser"
     
     let commentParser: Parser<unit, unit> = skipChar '#' >>. (skipManyTill anyChar (skipNewline <|> eof)) <!> "Comment parser"
     
@@ -66,7 +66,7 @@ let createParser (data: Parser<'data, unit>) =
     
     let declarationParser = annotatedDeclarationParser <|> simpleDeclarationParser
     
-    let variableDefinitionParser = declarationParser .>> equalsParser .>> ws .>>. valueExpressionParser .>> ws |>> (fun (decl, expr) -> VariableBindingExpression { varName = decl; value = expr; varData = () }) <!> "Variable definition parser"
+    let variableDefinitionParser = data .>>. declarationParser .>> equalsParser .>> ws .>>. valueExpressionParser .>> ws |>> (fun ((data, decl), expr) -> VariableBindingExpression { varName = decl; value = expr; varData = data }) <!> "Variable definition parser"
     
     let commaParser = skipChar ','
     
@@ -74,7 +74,7 @@ let createParser (data: Parser<'data, unit>) =
     
     let blockParameterParser = ((sepBy (ws >>. declarationParser .>> ws) commaParser) .>> ws .>> arrowParser) |> attempt |> opt <?> "Block parameters" <!> "Block parameter parser"
     
-    let blockParser = skipChar '[' >>. blockParameterParser .>> spaces .>>. (sepEndBy expressionParser separatorParser) .>> spaces .>> skipChar ']' |>> (fun (parameters, exprs) -> BlockExpression { parameters = Option.defaultValue [] parameters; body = exprs; data = () }) <!> "Block expression parser"
+    let blockParser = data .>> skipChar '[' .>>. blockParameterParser .>> spaces .>>. (sepEndBy expressionParser separatorParser) .>> spaces .>> skipChar ']' |>> (fun ((data, parameters), exprs) -> BlockExpression { parameters = Option.defaultValue [] parameters; body = exprs; data = data }) <!> "Block expression parser"
     
     let primitiveExpressionParser = 
         choiceL [
@@ -83,7 +83,7 @@ let createParser (data: Parser<'data, unit>) =
             groupExpressionParser
             variableExpressionParser ] "Primitive expression" <!> "Primitive expression parser"
     
-    let functionCallParser = primitiveExpressionParser .>>? ws .>>.? (sepEndBy1 primitiveExpressionParser ws) |>> (fun (first, exprs) -> FunctionCallExpression { func = first; args = exprs; data = () }) <!> "Function call parser"
+    let functionCallParser = data .>>. primitiveExpressionParser .>>? ws .>>.? (sepEndBy1 primitiveExpressionParser ws) |>> (fun ((data, first), exprs) -> FunctionCallExpression { func = first; args = exprs; data = data }) <!> "Function call parser"
     
     valueExpressionParserRef := choiceL [
         functionCallParser
@@ -98,7 +98,7 @@ let createParser (data: Parser<'data, unit>) =
     
     expressionParserRef := ws >>? singleExpressionParser .>> ws
     
-    let programParser =  spaces >>. (opt commentParser) >>. spaces >>. sepEndBy expressionParser separatorParser .>> spaces .>> eof |>> (fun exprs -> BlockExpression { parameters = []; body = exprs; data = () })
+    let programParser =  data .>> spaces .>> (opt commentParser) .>> spaces .>>. sepEndBy expressionParser separatorParser .>> spaces .>> eof |>> (fun (data, exprs) -> BlockExpression { parameters = []; body = exprs; data = data })
     
     let parse (code: string) = match CharParsers.run programParser code with
                                     | Success (res, a, b) -> Result.Ok res
