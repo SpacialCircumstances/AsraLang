@@ -13,11 +13,11 @@ let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
             reply
     else p
 
-let createParser _ =
+let createParser (data: Parser<'data, unit>) =
 
-    let (expressionParser: Parser<UntypedExpression, unit>, expressionParserRef) = createParserForwardedToRef ()
+    let (expressionParser: Parser<Expression<'data>, unit>, expressionParserRef) = createParserForwardedToRef ()
     
-    let (valueExpressionParser: Parser<UntypedExpression, unit>, valueExpressionParserRef) = createParserForwardedToRef ()
+    let (valueExpressionParser: Parser<Expression<'data>, unit>, valueExpressionParserRef) = createParserForwardedToRef ()
     
     let isSeparator (c: char) = Char.IsWhiteSpace c || c = ';' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':' || c = '#'
     
@@ -105,3 +105,5 @@ let createParser _ =
                                     | Failure (es, e, _) -> Result.Error e
 
     parse
+
+let defaultParser = createParser (preturn ())
