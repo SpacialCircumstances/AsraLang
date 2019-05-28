@@ -3,14 +3,14 @@
 open Xunit
 open Ast
 
-let astMatch (expected: UntypedExpression seq) (got: UntypedExpression) =
+let astMatch (expected: UntypedTestExpression seq) (got: UntypedTestExpression) =
     match got with
         | BlockExpression bl ->
             let got = bl.body
             if Seq.length expected <> Seq.length got then
                 Assert.True (false, sprintf "Expected length: %i, but got: %i" (Seq.length expected) (Seq.length got))
             else
-                Seq.iter2 (fun (e: UntypedExpression) (g: UntypedExpression) -> Assert.Equal(e, g)) expected got
+                Seq.iter2 (fun (e: UntypedTestExpression) (g: UntypedTestExpression) -> Assert.Equal(e, g)) expected got
         | _ -> invalidOp "Parser needs to return one top-level block"
 
 let isOk (result: Result<'a, 'b>) (f: 'a -> unit) = 
@@ -25,7 +25,7 @@ let isOk (result: Result<'a, 'b>) (f: 'a -> unit) =
 [<Fact>]
 let ``Parse literals`` () =
     let input = """12; 234.5; "test"; 123.4"""
-    let parsed = Parser.defaultParser input
+    let parsed = Parser.testParser input
     let expected = [
         LiteralExpression ({ literalValue = LiteralValue.Int 12L; data = () })
         LiteralExpression ({ literalValue = LiteralValue.Float 234.5; data = () })
@@ -37,7 +37,7 @@ let ``Parse literals`` () =
 [<Fact>]
 let ``Parse literals and variables`` () =
     let input = """"test"; test; 123; t123"""
-    let parsed = Parser.defaultParser input
+    let parsed = Parser.testParser input
     let expected = [
         LiteralExpression { data = (); literalValue = LiteralValue.String "test" }
         VariableExpression ("test", ())
@@ -49,7 +49,7 @@ let ``Parse literals and variables`` () =
 [<Fact>]
 let ``Parse groups`` () =
     let input = """(123); ("test"); (foo); ((42.6))"""
-    let parsed = Parser.defaultParser input
+    let parsed = Parser.testParser input
     let expected = [
         GroupExpression (LiteralExpression { data = (); literalValue = LiteralValue.Int 123L })
         GroupExpression (LiteralExpression { data = (); literalValue = LiteralValue.String "test" })
@@ -64,7 +64,7 @@ let ``Parse variable definitions`` () =
     test = 42
     fooBar = "test" 
     """
-    let parsed = Parser.defaultParser input
+    let parsed = Parser.testParser input
     let expected = [
         VariableBindingExpression { varName = Simple "test"; value = (LiteralExpression { data = (); literalValue = LiteralValue.Int 42L }); varData = () }
         VariableBindingExpression { varName = Simple "fooBar"; value = (LiteralExpression { data = (); literalValue = LiteralValue.String "test" }); varData = () }
@@ -83,7 +83,7 @@ let ``Parse block expressions`` () =
         ]
     ]
     """    
-    let parsed = Parser.defaultParser input
+    let parsed = Parser.testParser input
     let block = BlockExpression { parameters = []; data = (); body = [
         LiteralExpression { data = (); literalValue = LiteralValue.String "asdf" }
         LiteralExpression { data = (); literalValue = LiteralValue.Int 123L }
@@ -102,7 +102,7 @@ let ``Parse function calls`` () =
     [ test ] [ 324; "asdf" ]
     (test 23 234.3) 12.1 [ x ]
     """    
-    let parsed = Parser.defaultParser input
+    let parsed = Parser.testParser input
     let expected = [ 
         FunctionCallExpression { func = VariableExpression ("+", ()); data = (); args = [
             LiteralExpression { data = (); literalValue = Int 2L }
@@ -144,7 +144,7 @@ let ``Type annotated declarations`` () =
     t2: string = "test"
     t5: Foo = 42.2
     """    
-    let parsed = Parser.defaultParser input
+    let parsed = Parser.testParser input
     let expected = [ 
         VariableBindingExpression { 
             varData = ();
@@ -167,7 +167,7 @@ let ``Type annotated declarations`` () =
 [<Fact>]
 let ``Block with identifier`` () =
     let input = "[ test ]"
-    let parsed = Parser.defaultParser input
+    let parsed = Parser.testParser input
     let expected = [
         BlockExpression {
             parameters = []
@@ -187,7 +187,7 @@ let ``Block with parameters`` () =
     ]
     [ x: String -> "test" ]
     """
-    let parsed = Parser.defaultParser input
+    let parsed = Parser.testParser input
     let expected = [
         VariableBindingExpression {
             varName = Simple "block"
@@ -230,7 +230,7 @@ let ``Parsing with comments`` () =
     test = 42 # foo bar 42; single line comment
     fooBar = "test" 
     """
-    let parsed = Parser.defaultParser input
+    let parsed = Parser.testParser input
     let expected = [
         VariableBindingExpression { varData = (); varName = Simple "test"; value = (LiteralExpression { literalValue = Int 42L; data = () }) }
         VariableBindingExpression { varData = (); varName = Simple "fooBar"; value = (LiteralExpression { literalValue = String "test"; data = () }) }

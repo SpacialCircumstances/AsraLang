@@ -1,5 +1,7 @@
 ﻿module Ast
 
+open FParsec
+
 type LiteralValue = 
     | Int of int64
     | String of string
@@ -49,7 +51,9 @@ and Expression<'data> =
     | BlockExpression of Block<'data>
     | GroupExpression of Expression<'data>
 
-type UntypedExpression = Expression<unit>
+type UntypedExpression = Expression<Position>
+
+type UntypedTestExpression = Expression<unit>
 
 type TypedExpression = Expression<Types.AType>
 

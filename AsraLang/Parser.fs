@@ -106,4 +106,6 @@ let createParser (data: Parser<'data, unit>) =
 
     parse
 
-let defaultParser = createParser (preturn ())
+let testParser = createParser (preturn ())
+
+let defaultParser = createParser getPosition

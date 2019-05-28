@@ -9,7 +9,7 @@ open Types
 let main argv =
     let inFile = argv.[0]
     let outFile = argv.[1]
-    let ast = File.ReadAllText inFile |> (Parser.defaultParser)
+    let ast = File.ReadAllText inFile |> Parser.defaultParser
 
     match ast with
         | Error e -> printfn "%A" e
