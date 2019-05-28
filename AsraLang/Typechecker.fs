@@ -25,11 +25,11 @@ let rec typeExpr (state: State) (expr: T.UntypedExpression) =
         | T.LiteralExpression lit ->
             let literal, litType = match lit.literalValue with
                                     | T.LiteralValue.String str ->
-                                        T.String str, Native "String"
+                                        T.String str, astring
                                     | T.LiteralValue.Int i ->
-                                        T.Int i, Native "Int"
+                                        T.Int i, aint
                                     | T.LiteralValue.Float f ->
-                                        T.Float f, Native "Float"
+                                        T.Float f, afloat
             T.LiteralExpression { data = litType; literalValue = literal }, state
         | T.GroupExpression e ->
             let subExpr, newState = typeExpr state e

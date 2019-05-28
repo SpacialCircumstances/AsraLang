@@ -15,21 +15,21 @@ let main argv =
         | Error e -> printfn "%A" e
         | Ok ast ->
             let externs = [
-                { asraName = "println"; asraType = genFunType [ Native "String" ] (Native "Unit"); externName = "println" }
-                { asraName = "+"; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Int"); externName = "add" }
-                { asraName = "-"; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Int"); externName = "subtract" }
-                { asraName = "*"; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Int"); externName = "multiply" }
-                { asraName = "/"; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Int"); externName = "divide" }
+                { asraName = "println"; asraType = genFunType [ astring ] (aunit); externName = "println" }
+                { asraName = "+"; asraType = genFunType [ aint; aint ] (aint); externName = "add" }
+                { asraName = "-"; asraType = genFunType [ aint; aint ] (aint); externName = "subtract" }
+                { asraName = "*"; asraType = genFunType [ aint; aint ] (aint); externName = "multiply" }
+                { asraName = "/"; asraType = genFunType [ aint; aint ] (aint); externName = "divide" }
                 { asraName = "if"; asraType = genFunType [
-                    genFunType [ Native "Unit" ] (Native "Bool")
-                    genFunType [ Native "Unit" ] (Native "Unit")
-                    genFunType [ Native "Unit" ] (Native "Unit")
-                ] (Native "Unit"); externName = "iffn" }
-                { asraName = "=="; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Bool"); externName = "eq" }
-                { asraName = "!="; asraType = genFunType [ Native "Int"; Native "Int" ] (Native "Bool"); externName = "neq" }
-                { asraName = "not"; asraType = genFunType [ Native "Bool" ] (Native "Bool"); externName = "not" }
-                { asraName = "&"; asraType = genFunType [ Native "Bool"; Native "Bool" ] (Native "Bool"); externName = "and" }
-                { asraName = "|"; asraType = genFunType [ Native "Bool"; Native "Bool" ] (Native "Bool"); externName = "or" }
+                    genFunType [ aunit ] (abool)
+                    genFunType [ aunit ] (aunit)
+                    genFunType [ aunit ] (aunit)
+                ] (aunit); externName = "iffn" }
+                { asraName = "=="; asraType = genFunType [ aint; aint ] (abool); externName = "eq" }
+                { asraName = "!="; asraType = genFunType [ aint; aint ] (abool); externName = "neq" }
+                { asraName = "not"; asraType = genFunType [ abool ] (abool); externName = "not" }
+                { asraName = "&"; asraType = genFunType [ abool; abool ] (abool); externName = "and" }
+                { asraName = "|"; asraType = genFunType [ abool; abool ] (abool); externName = "or" }
             ]
             let typedAst, _ = typecheck ast externs
             let jsGen = genState (File.ReadAllText Config.currentConfig.preludePath) externs

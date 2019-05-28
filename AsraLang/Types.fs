@@ -18,6 +18,12 @@ with
                                         | FunctionType ft ->
                                             sprintf "(%O -> %O) -> %O" ft.input ft.output funt.output
 
+let aint = Native "Int"
+let astring = Native "String"
+let aunit = Native "Unit"
+let afloat = Native "Float"
+let abool = Native "Bool"
+
 let rec returnType (funcT: AType) (paramTs: AType list): Result<AType, string> =
     match funcT with
         | Native t -> 
