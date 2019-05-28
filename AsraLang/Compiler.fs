@@ -1,14 +1,18 @@
 ﻿module Compiler
 
 open System.IO
+open JsGenerator
 
-module CompilerParameters =
+module Parameters =
     type T = {
         mainFile: string
         searchDirectories: string list
+        outputFile: string
     }
+    
+    type T2 = CompilerParameters of T
 
-    let create (mainFile: string) (dirs: string list): Result<T, string> =
+    let create (mainFile: string) (dirs: string list) (outFile: string): Result<T2, string> =
         match File.Exists mainFile with
             | true ->
                 let dirErrors = List.fold (fun errs dir -> match Directory.Exists dir with
@@ -19,14 +23,35 @@ module CompilerParameters =
                         {
                             mainFile = mainFile
                             searchDirectories = dirs
-                        } |> Ok
+                            outputFile = outFile
+                        } |> CompilerParameters |> Ok
                     | _ -> 
                         "Search directories not valid: \n" + (String.concat "\n" dirErrors) |> Error
             | false ->
                 Error (sprintf "File %s does not exist" mainFile)
 
+open Parameters
+
 type CompilerError = 
-    | GeneralError
-    | ParserError
-    | TypeError
+    | ParserError of string
+    | TypeError of string
+    | Warning
+
+let compile (CompilerParameters parameters) =
+    let parsed = File.ReadAllText parameters.mainFile |> Parser.defaultParser
+    match parsed with
+        | Error e ->
+            [ ParserError e ]
+        | Ok ast ->
+            try
+                let outFile = parameters.outputFile
+                let typedAst, _ = Typechecker.typecheck ast JsLibrary.externs
+                let jsGen = genState (File.ReadAllText Config.currentConfig.preludePath) JsLibrary.externs
+                let generatedJs = generateJs jsGen typedAst
+                if (File.Exists outFile) then File.Delete outFile
+                File.WriteAllText (outFile, generatedJs)
+                []
+            with
+                | :? System.InvalidOperationException as ex -> [ TypeError ex.Message ]
+            
 

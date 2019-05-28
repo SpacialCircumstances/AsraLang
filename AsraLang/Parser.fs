@@ -102,7 +102,7 @@ let createParser (data: Parser<'data, unit>) =
     
     let parse (code: string) = match CharParsers.run programParser code with
                                     | Success (res, a, b) -> Result.Ok res
-                                    | Failure (es, e, _) -> Result.Error e
+                                    | Failure (es, e, _) -> Result.Error es
 
     parse
 
