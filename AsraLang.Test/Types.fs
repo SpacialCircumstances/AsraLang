@@ -92,3 +92,37 @@ let ``Type printing`` () =
     }
     Assert.Equal("(String -> Int) -> Unit", ft4.ToString())
     ()
+
+[<Fact>]
+let ``Apply by arg count`` () =
+    let ft = FunctionType {
+        input = astring;
+        output = FunctionType {
+            input = FunctionType {
+                input = aint;
+                output = astring;
+            }
+            output = FunctionType {
+                input = aint;
+                output = afloat;
+            }
+        }
+    }
+    let e1 = FunctionType {
+        input = FunctionType {
+            input = aint;
+            output = astring;
+        }
+        output = FunctionType {
+            input = aint;
+            output = afloat } } |> Some
+
+    let e2 = FunctionType {
+        input = aint
+        output = afloat } |> Some
+    let e3 = afloat |> Some
+    let e4 = None
+    Assert.Equal(e1, appliedType ft 1)
+    Assert.Equal(e2, appliedType ft 2)
+    Assert.Equal(e3, appliedType ft 3)
+    Assert.Equal(e4, appliedType ft 4)
