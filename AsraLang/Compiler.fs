@@ -2,6 +2,7 @@
 
 open System.IO
 open JsGenerator
+open Typechecker
 
 module Parameters =
     type T = {
@@ -35,7 +36,7 @@ open Parameters
 type CompilerError = 
     | ParserError of string
     | TypeError of string
-    | Warning
+    | Warning of string
 
 let compile (CompilerParameters parameters) =
     let parsed = File.ReadAllText parameters.mainFile |> Parser.defaultParser
@@ -46,11 +47,17 @@ let compile (CompilerParameters parameters) =
             try
                 let outFile = parameters.outputFile
                 let typedAst, _, errors = Typechecker.typecheck ast JsLibrary.externs
-                let jsGen = genState (File.ReadAllText Config.currentConfig.preludePath) JsLibrary.externs
-                let generatedJs = generateJs jsGen typedAst
-                if (File.Exists outFile) then File.Delete outFile
-                File.WriteAllText (outFile, generatedJs)
-                []
+                match List.length errors with
+                    | 0 ->
+                        let jsGen = genState (File.ReadAllText Config.currentConfig.preludePath) JsLibrary.externs
+                        let generatedJs = generateJs jsGen typedAst
+                        if (File.Exists outFile) then File.Delete outFile
+                        File.WriteAllText (outFile, generatedJs)
+                        []
+                    | _ ->
+                        List.map (fun e -> match e with
+                                            | Message.TypeError s -> TypeError s
+                                            | Message.Warning w -> Warning w) errors
             with
                 | :? System.InvalidOperationException as ex -> [ TypeError ex.Message ]
             
