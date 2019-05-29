@@ -45,7 +45,7 @@ let compile (CompilerParameters parameters) =
         | Ok ast ->
             try
                 let outFile = parameters.outputFile
-                let typedAst, _ = Typechecker.typecheck ast JsLibrary.externs
+                let typedAst, _, errors = Typechecker.typecheck ast JsLibrary.externs
                 let jsGen = genState (File.ReadAllText Config.currentConfig.preludePath) JsLibrary.externs
                 let generatedJs = generateJs jsGen typedAst
                 if (File.Exists outFile) then File.Delete outFile
