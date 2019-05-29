@@ -9,9 +9,9 @@ type Extern = {
     externName: string
 }
 
-type Error = {
-    message: string
-}
+type Message =
+    | TypeError of string
+    | Warning of string
 
 type State = {
     context: Map<string, AType>
@@ -32,10 +32,10 @@ let rec typeExpr (state: State) (expr: UntypedExpression) =
                                         Float f, afloat
             LiteralExpression { data = litType; literalValue = literal }, state, []
         | GroupExpression e ->
-            let subExpr, newState, _ = typeExpr state e
-            GroupExpression subExpr, newState, []
+            let subExpr, newState, errors = typeExpr state e
+            GroupExpression subExpr, newState, errors
         | VariableBindingExpression def ->
-            let result, _, _ = typeExpr state def.value
+            let result, _, errors = typeExpr state def.value
             let valueType = getType result
             let name = match def.varName with
                         | Simple s -> s
@@ -44,7 +44,7 @@ let rec typeExpr (state: State) (expr: UntypedExpression) =
             let newContext = Map.add name valueType state.context
             //TODO: Check type annotation if it matches
             let newState = { state with context = newContext }
-            VariableBindingExpression binding, newState, []
+            VariableBindingExpression binding, newState, errors
         | VariableExpression (var, _) ->
             let varType = Map.tryFind var state.context
             match varType with
