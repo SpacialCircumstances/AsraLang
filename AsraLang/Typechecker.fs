@@ -18,6 +18,9 @@ type State = {
     types: Map<string, AType>
 }
 
+let formatPosition (pos: FParsec.Position) =
+    sprintf "File: %s Line: %i Col: %i" pos.StreamName pos.Line pos.Column
+
 let resolveType (state: State) (typeName: string) = Map.find typeName state.types
 
 let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression option * State * Message list =
@@ -50,14 +53,14 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                     let newState = { state with context = newContext }
                     Some (VariableBindingExpression binding), newState, errors
                 | None -> None, state, errors
-        | VariableExpression (var, _) ->
+        | VariableExpression (var, pos) ->
             let varType = Map.tryFind var state.context
             match varType with
                 | Some varType ->
                     Some (VariableExpression (var, varType)), state, []
                 | None ->
-                    //TODO: We need error handling
-                    invalidOp (sprintf "Variable %s not found" var)
+                    let error = sprintf "%s: Variable \"%s\" not found" (formatPosition pos) var |> TypeError
+                    None, state, [error]
         | FunctionCallExpression fc ->
             let args, errors = List.mapFold (fun errors a -> 
                                         let x, _, newErrors = typeExpr state a
