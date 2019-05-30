@@ -20,50 +20,62 @@ type State = {
 
 let resolveType (state: State) (typeName: string) = Map.find typeName state.types
 
-let rec typeExpr (state: State) (expr: UntypedExpression) =
+let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression option * State * Message list =
     match expr with
         | LiteralExpression lit ->
             let literal, litType = match lit.literalValue with
                                     | LiteralValue.String str ->
                                         String str, astring
                                     | LiteralValue.Int i ->
-                                        Int i, aint
+                                        Int i, aint 
                                     | LiteralValue.Float f ->
                                         Float f, afloat
-            LiteralExpression { data = litType; literalValue = literal }, state, []
+            Some (LiteralExpression { data = litType; literalValue = literal }), state, []
         | GroupExpression e ->
             let subExpr, newState, errors = typeExpr state e
-            GroupExpression subExpr, newState, errors
+            match subExpr with
+                | None -> None, newState, errors
+                | Some subExpr -> Some (GroupExpression subExpr), newState, errors
         | VariableBindingExpression def ->
             let result, _, errors = typeExpr state def.value
-            let valueType = getType result
-            let name = match def.varName with
-                        | Simple s -> s
-                        | Annotated a -> a.varName
-            let binding: VariableBinding<AType> = { varName = Simple name; varData = valueType; value = result }
-            let newContext = Map.add name valueType state.context
-            //TODO: Check type annotation if it matches
-            let newState = { state with context = newContext }
-            VariableBindingExpression binding, newState, errors
+            match result with
+                | Some result ->
+                    let valueType = getType result
+                    let name = match def.varName with
+                                | Simple s -> s
+                                | Annotated a -> a.varName
+                    let binding: VariableBinding<AType> = { varName = Simple name; varData = valueType; value = result }
+                    let newContext = Map.add name valueType state.context
+                    //TODO: Check type annotation if it matches
+                    let newState = { state with context = newContext }
+                    Some (VariableBindingExpression binding), newState, errors
+                | None -> None, state, errors
         | VariableExpression (var, _) ->
             let varType = Map.tryFind var state.context
             match varType with
                 | Some varType ->
-                    VariableExpression (var, varType), state, []
+                    Some (VariableExpression (var, varType)), state, []
                 | None ->
                     //TODO: We need error handling
                     invalidOp (sprintf "Variable %s not found" var)
         | FunctionCallExpression fc ->
-            let args = List.map (fun a -> 
-                                        let x, _, _ = typeExpr state a
-                                        x) fc.args
-            let funExp, _, _ = typeExpr state fc.func
-            let funType = getType funExp
-            match returnType funType (List.map getType args) with
-                | Ok retType ->
-                    let call: FunctionCall<AType> = { func = funExp; args = args; data = retType }
-                    FunctionCallExpression call, state, []
-                | Error e -> invalidOp e
+            let args, errors = List.mapFold (fun errors a -> 
+                                        let x, _, newErrors = typeExpr state a
+                                        (x, errors @ newErrors)) [] fc.args
+            match List.length errors with
+                 | 0 -> 
+                        let funExp, _, err = typeExpr state fc.func
+                        let args = List.choose id args //No errors - we can unwrap the arguments
+                        match funExp with
+                            | Some funExp ->
+                                let funType = getType funExp
+                                match returnType funType (List.map getType args) with
+                                    | Ok retType ->
+                                        let call: FunctionCall<AType> = { func = funExp; args = args; data = retType }
+                                        Some (FunctionCallExpression call), state, []
+                                    | Error e -> invalidOp e
+                            | None -> None, state, err
+                 | _ -> None, state, errors
         | BlockExpression block ->
             let foldSubExprs = (fun (state, errs) expr ->
                 let te, st, es = typeExpr state expr
@@ -71,10 +83,14 @@ let rec typeExpr (state: State) (expr: UntypedExpression) =
             match List.isEmpty block.parameters with
                 | true ->
                     let body, (_, errors) = List.mapFold foldSubExprs (state, []) block.body
-                    let rt = getType (List.last body)
-                    let bt = genFunType [] rt
-                    let tblock: Block<AType> = { parameters = []; body = body; data = bt }
-                    BlockExpression tblock, state, errors
+                    match List.length errors with
+                        | 0 ->
+                            let body = List.choose id body
+                            let rt = getType (List.last body)
+                            let bt = genFunType [] rt
+                            let tblock: Block<AType> = { parameters = []; body = body; data = bt }
+                            Some(BlockExpression tblock), state, errors
+                        | _ -> None, state, errors
                 | false ->
                     let parameters = block.parameters
                     let typedParams = List.map (fun d -> match d with
@@ -83,10 +99,14 @@ let rec typeExpr (state: State) (expr: UntypedExpression) =
                     let blockContext = List.fold (fun ctx (p, pt) -> Map.add p pt ctx) state.context typedParams
                     let blockState = { state with context = blockContext }
                     let body, (_, errors) = List.mapFold foldSubExprs (blockState, []) block.body
-                    let rt = getType (List.last body)
-                    let bt = genFunType (List.map getType body) rt
-                    let tblock: Block<AType> = { parameters = (List.map (fst >> Simple) typedParams); body = body; data = bt }
-                    BlockExpression tblock, state, errors
+                    match errors with
+                        | [] ->
+                            let body = List.choose id body
+                            let rt = getType (List.last body)
+                            let bt = genFunType (List.map getType body) rt
+                            let tblock: Block<AType> = { parameters = (List.map (fst >> Simple) typedParams); body = body; data = bt }
+                            Some (BlockExpression tblock), state, errors
+                        | _ -> None, state, errors
 
 let typecheck (program: UntypedExpression) (externs: Extern list) =
     let init = { 
