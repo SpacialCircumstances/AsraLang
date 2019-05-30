@@ -100,12 +100,12 @@ let createParser (data: Parser<'data, unit>) =
     
     let programParser =  data .>> spaces .>> (opt commentParser) .>> spaces .>>. sepEndBy expressionParser separatorParser .>> spaces .>> eof |>> (fun (data, exprs) -> BlockExpression { parameters = []; body = exprs; data = data })
     
-    let parse (code: string) = match CharParsers.run programParser code with
-                                    | Success (res, a, b) -> Result.Ok res
-                                    | Failure (es, e, _) -> Result.Error es
+    let parse (name: string) (code: string) = match CharParsers.runParserOnString programParser () name code with
+                                                | Success (res, a, b) -> Result.Ok res
+                                                | Failure (es, e, _) -> Result.Error es
 
     parse
 
-let testParser = createParser (preturn ())
+let testParser = (createParser (preturn ())) "Test"
 
 let defaultParser = createParser getPosition

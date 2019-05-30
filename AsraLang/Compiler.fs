@@ -39,7 +39,9 @@ type CompilerError =
     | Warning of string
 
 let compile (CompilerParameters parameters) =
-    let parsed = File.ReadAllText parameters.mainFile |> Parser.defaultParser
+    let filename = Path.GetFileName parameters.mainFile
+    let parsed = File.ReadAllText parameters.mainFile 
+                    |> Parser.defaultParser filename
     match parsed with
         | Error e ->
             [ ParserError e ]
