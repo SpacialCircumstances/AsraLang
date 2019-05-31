@@ -76,7 +76,9 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                                     | Ok retType ->
                                         let call: FunctionCall<AType> = { func = funExp; args = args; data = retType }
                                         Some (FunctionCallExpression call), state, []
-                                    | Error e -> invalidOp e
+                                    | Error e -> 
+                                        let error = sprintf "%s: %s" (formatPosition fc.data) e |> TypeError
+                                        None, state, [error]
                             | None -> None, state, err
                  | _ -> None, state, errors
         | BlockExpression block ->
