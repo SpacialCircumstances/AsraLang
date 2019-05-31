@@ -97,21 +97,28 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                             Some(BlockExpression tblock), state, errors
                         | _ -> None, state, errors
                 | false ->
+                    //TODO: Type inference
                     let parameters = block.parameters
-                    let typedParams = List.map (fun d -> match d with
-                                                            | Simple _ -> invalidOp "You need to specify type names in block parameters"
-                                                            | Annotated t -> (t.varName, resolveType state t.typeName)) parameters
-                    let blockContext = List.fold (fun ctx (p, pt) -> Map.add p pt ctx) state.context typedParams
-                    let blockState = { state with context = blockContext }
-                    let body, (_, errors) = List.mapFold foldSubExprs (blockState, []) block.body
-                    match errors with
-                        | [] ->
-                            let body = List.choose id body
-                            let rt = getType (List.last body)
-                            let bt = genFunType (List.map getType body) rt
-                            let tblock: Block<AType> = { parameters = (List.map (fst >> Simple) typedParams); body = body; data = bt }
-                            Some (BlockExpression tblock), state, errors
-                        | _ -> None, state, errors
+                    let typedParams = List.choose (fun d -> match d with
+                                                                | Simple _ -> None
+                                                                | Annotated t -> (t.varName, resolveType state t.typeName) |> Some) parameters
+
+                    if (List.length typedParams) = (List.length parameters) then
+                        let blockContext = List.fold (fun ctx (p, pt) -> Map.add p pt ctx) state.context typedParams
+                        let blockState = { state with context = blockContext }
+                        let body, (_, errors) = List.mapFold foldSubExprs (blockState, []) block.body
+                        match errors with
+                            | [] ->
+                                let body = List.choose id body
+                                let rt = getType (List.last body)
+                                let bt = genFunType (List.map getType body) rt
+                                let tblock: Block<AType> = { parameters = (List.map (fst >> Simple) typedParams); body = body; data = bt }
+                                Some (BlockExpression tblock), state, errors
+                            | _ -> None, state, errors
+                    else
+                        let error = sprintf "%s: Function parameter types not specified" (formatPosition block.data)
+                        None, state, [TypeError error]
+                    
 
 let typecheck (program: UntypedExpression) (externs: Extern list) =
     let init = { 
