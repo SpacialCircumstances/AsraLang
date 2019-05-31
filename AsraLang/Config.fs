@@ -7,5 +7,5 @@ type Config = {
 
 let currentConfig = {
     parserTracing = false
-    preludePath = "Prelude/prelude.js"
+    preludePath = "../Stdlib/prelude.js"
 }

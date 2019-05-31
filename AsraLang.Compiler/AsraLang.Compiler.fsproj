@@ -7,12 +7,10 @@
 
   <ItemGroup>
     <EmbeddedResource Remove="Examples\**" />
+    <EmbeddedResource Remove="Prelude\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Prelude\prelude.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <Compile Include="Program.fs" />
   </ItemGroup>
 
