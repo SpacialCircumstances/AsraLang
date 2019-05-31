@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.438
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28922.388
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AsraLang", "AsraLang\AsraLang.fsproj", "{212EEC38-4FD2-46D7-B728-0E2E76E49920}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "AsraLang", "AsraLang\AsraLang.fsproj", "{212EEC38-4FD2-46D7-B728-0E2E76E49920}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AsraLang.Compiler", "AsraLang.Compiler\AsraLang.Compiler.fsproj", "{57686F7F-5815-4324-B4F2-7D98E8F9CD99}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "AsraLang.Compiler", "AsraLang.Compiler\AsraLang.Compiler.fsproj", "{57686F7F-5815-4324-B4F2-7D98E8F9CD99}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AsraLang.Test", "AsraLang.Test\AsraLang.Test.fsproj", "{AFB890E6-5EDC-480E-8354-F71D39482080}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "AsraLang.Test", "AsraLang.Test\AsraLang.Test.fsproj", "{AFB890E6-5EDC-480E-8354-F71D39482080}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AsraLang.IntegrationTests", "AsraLang.IntegrationTests\AsraLang.IntegrationTests.fsproj", "{CCB51AB6-A7A5-442D-9F61-4B1450F3532F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{AFB890E6-5EDC-480E-8354-F71D39482080}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFB890E6-5EDC-480E-8354-F71D39482080}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFB890E6-5EDC-480E-8354-F71D39482080}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CCB51AB6-A7A5-442D-9F61-4B1450F3532F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCB51AB6-A7A5-442D-9F61-4B1450F3532F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCB51AB6-A7A5-442D-9F61-4B1450F3532F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCB51AB6-A7A5-442D-9F61-4B1450F3532F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
