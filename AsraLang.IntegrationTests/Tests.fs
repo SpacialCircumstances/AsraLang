@@ -1,8 +1,10 @@
-module Tests
+﻿module Tests
 
-open System
-open Xunit
+open NUnit.Framework
 
-[<Fact>]
-let ``My test`` () =
-    Assert.True(true)
+[<TestFixture>]
+type IntegrationTests () =
+
+    [<Test>]
+    member this.RunTests() =
+        Assert.True(true)

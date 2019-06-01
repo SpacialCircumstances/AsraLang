@@ -9,7 +9,7 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "AsraLang.Compiler", "AsraLa
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "AsraLang.Test", "AsraLang.Test\AsraLang.Test.fsproj", "{AFB890E6-5EDC-480E-8354-F71D39482080}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AsraLang.IntegrationTests", "AsraLang.IntegrationTests\AsraLang.IntegrationTests.fsproj", "{CCB51AB6-A7A5-442D-9F61-4B1450F3532F}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AsraLang.IntegrationTests", "AsraLang.IntegrationTests\AsraLang.IntegrationTests.fsproj", "{7FECDFF0-6BC4-417A-B2D5-C583159AC1AD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +29,10 @@ Global
 		{AFB890E6-5EDC-480E-8354-F71D39482080}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFB890E6-5EDC-480E-8354-F71D39482080}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFB890E6-5EDC-480E-8354-F71D39482080}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CCB51AB6-A7A5-442D-9F61-4B1450F3532F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CCB51AB6-A7A5-442D-9F61-4B1450F3532F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CCB51AB6-A7A5-442D-9F61-4B1450F3532F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CCB51AB6-A7A5-442D-9F61-4B1450F3532F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FECDFF0-6BC4-417A-B2D5-C583159AC1AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FECDFF0-6BC4-417A-B2D5-C583159AC1AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FECDFF0-6BC4-417A-B2D5-C583159AC1AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FECDFF0-6BC4-417A-B2D5-C583159AC1AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
