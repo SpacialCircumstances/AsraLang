@@ -1,8 +1,18 @@
 module Tests
 
-open System
+open System.IO
 open Xunit
 
-[<Fact>]
-let ``My test`` () =
-    Assert.True(true)
+let integrationTestDirectory = "../../../../Tests"
+
+let getTestCases () =
+    if Directory.Exists integrationTestDirectory then
+        Directory.EnumerateDirectories (integrationTestDirectory)
+            |> Seq.map (fun dir -> [| box dir |])
+    else invalidOp "Test directory not found"
+
+[<Theory>]
+[<MemberData("getTestCases")>]
+let integrationTest (testDir: string) =
+    printfn "%s" testDir
+    ()
