@@ -5,7 +5,7 @@ type Config = {
     preludePath: string
 }
 
-let currentConfig = {
+let mutable currentConfig = {
     parserTracing = false
     preludePath = "../Stdlib/prelude.js"
 }
