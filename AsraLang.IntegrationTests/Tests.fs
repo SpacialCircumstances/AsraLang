@@ -4,11 +4,17 @@ open System.IO
 open Xunit
 open Config
 open System.Diagnostics
+open System
 
 let integrationTestDirectory = "../../../../Tests"
 let mainFileName = "main.asra"
 let outFileName = "out.js"
 let outputFileName = "output.txt"
+
+let assertOutputEqual (expected: string) (got: string) =
+    let normExp = System.Text.RegularExpressions.Regex.Replace(expected, @"\r\n|\n\r|\n|\r", "\n")
+    let normGot = System.Text.RegularExpressions.Regex.Replace(got, @"\r\n|\n\r|\n|\r", "\n")
+    Assert.Equal(normExp, normGot)
 
 let getTestCases () =
     if Directory.Exists integrationTestDirectory then
@@ -47,4 +53,4 @@ let integrationTest (testDir: string) =
     let compilerOut = Compiler.compile parameters
     Assert.Empty(compilerOut)
     let output = runCompiledScriptWithNode outFile
-    Assert.Equal(expectedOutput, output)
+    assertOutputEqual expectedOutput output
