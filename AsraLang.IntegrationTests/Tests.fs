@@ -12,8 +12,8 @@ let outFileName = "out.js"
 let outputFileName = "output.txt"
 
 let assertOutputEqual (expected: string) (got: string) =
-    let normExp = System.Text.RegularExpressions.Regex.Replace(expected, @"\r\n|\n\r|\n|\r", "\n")
-    let normGot = System.Text.RegularExpressions.Regex.Replace(got, @"\r\n|\n\r|\n|\r", "\n")
+    let normExp = System.Text.RegularExpressions.Regex.Replace(expected, @"\r\n|\n\r|\n|\r", "\n").TrimEnd('\n')
+    let normGot = System.Text.RegularExpressions.Regex.Replace(got, @"\r\n|\n\r|\n|\r", "\n").TrimEnd('\n')
     Assert.Equal(normExp, normGot)
 
 let getTestCases () =
