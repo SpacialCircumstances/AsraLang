@@ -3,6 +3,7 @@ module Tests
 open System.IO
 open Xunit
 open Config
+open System.Diagnostics
 
 let integrationTestDirectory = "../../../../Tests"
 let mainFileName = "main.asra"
@@ -14,6 +15,17 @@ let getTestCases () =
         Directory.EnumerateDirectories (integrationTestDirectory)
             |> Seq.map (fun dir -> [| box dir |])
     else invalidOp "Test directory not found"
+
+let runCompiledScriptWithNode (file: string) =
+    use proc = new Process()
+    proc.StartInfo.FileName <- "node"
+    proc.StartInfo.Arguments <- file
+    proc.StartInfo.UseShellExecute <- false
+    proc.StartInfo.RedirectStandardOutput <- true
+    proc.Start() |> ignore
+    let output = proc.StandardOutput.ReadToEnd();
+    proc.WaitForExit();
+    output
 
 [<Theory>]
 [<MemberData("getTestCases")>]
@@ -34,4 +46,5 @@ let integrationTest (testDir: string) =
                         | Ok p -> p
     let compilerOut = Compiler.compile parameters
     Assert.Empty(compilerOut)
-    ()
+    let output = runCompiledScriptWithNode outFile
+    Assert.Equal(expectedOutput, output)
