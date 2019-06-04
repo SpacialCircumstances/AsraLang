@@ -56,7 +56,7 @@ let createParser (data: Parser<'data, unit>) =
     
     let groupExpressionParser = between openParensParser closeParensParser expressionParser |>> GroupExpression <?> "Group expression" <!> "Group expression parser"
     
-    let typeParser = identifierParser
+    let typeParser = identifierParser |>> Name
     
     let equalsParser = pchar '='
     
