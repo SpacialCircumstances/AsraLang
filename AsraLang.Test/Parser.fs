@@ -236,3 +236,43 @@ let ``Parsing with comments`` () =
         VariableBindingExpression { varData = (); varName = Simple "fooBar"; value = (LiteralExpression { literalValue = String "test"; data = () }) }
     ]
     isOk parsed (fun result -> astMatch expected result)
+
+[<Fact>]
+let ``Block binding with type annotation`` () =
+    let input = """
+    intEqual: Int => Int => Bool = [ a: Int, b: Int -> == a b ]
+    """
+    let parsed = Parser.testParser input
+    let expected = [
+        VariableBindingExpression {
+            varData = ()
+            varName = Annotated {
+                varName = "intEqual"
+                typeName = Function (Name "Int", Function(Name "Int", Name "Bool"))
+            }
+            value = BlockExpression {
+                data = ()
+                parameters = [
+                    Annotated {
+                        varName = "a"
+                        typeName = Name "Int"
+                    }
+                    Annotated {
+                        varName = "b"
+                        typeName = Name "Int"
+                    }
+                ]
+                body = [
+                    FunctionCallExpression {
+                        func = VariableExpression ("==", ())
+                        args = [
+                            VariableExpression ("a", ())
+                            VariableExpression ("b", ())
+                        ]
+                        data = ()
+                    }
+                ]
+            }
+        }
+    ]
+    isOk parsed (fun result -> astMatch expected result)
