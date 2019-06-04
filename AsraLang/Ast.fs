@@ -12,8 +12,12 @@ type Literal<'data> = {
     literalValue: LiteralValue
 }
 
+type TypeDeclaration =
+    | Name of string
+    | Function of TypeDeclaration * TypeDeclaration
+
 type TypeAnnotated = { //TODO: Support complex types
-    typeName: string
+    typeName: TypeDeclaration
     varName: string
 }
 

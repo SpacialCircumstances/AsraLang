@@ -15,13 +15,13 @@ type Message =
 
 type State = {
     context: Map<string, AType>
-    types: Map<string, AType>
+    types: Map<TypeDeclaration, AType>
 }
 
 let formatPosition (pos: FParsec.Position) =
     sprintf "File: %s Line: %i Col: %i" pos.StreamName pos.Line pos.Column
 
-let resolveType (state: State) (typeName: string) = Map.find typeName state.types
+let resolveType (state: State) (typeName: TypeDeclaration) = Map.find typeName state.types
 
 let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression option * State * Message list =
     match expr with
@@ -124,11 +124,11 @@ let typecheck (program: UntypedExpression) (externs: Extern list) =
     let init = { 
         context = Map.ofList (List.map (fun ext -> ext.asraName, ext.asraType) externs); 
         types = Map.ofList [ 
-            "Int", aint
-            "Float", afloat
-            "Bool", abool
-            "Unit", aunit
-            "String", astring
+            Name "Int", aint
+            Name "Float", afloat
+            Name "Bool", abool
+            Name "Unit", aunit
+            Name "String", astring
         ]
     }
     typeExpr init program

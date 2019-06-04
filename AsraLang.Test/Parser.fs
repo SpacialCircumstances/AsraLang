@@ -148,17 +148,17 @@ let ``Type annotated declarations`` () =
     let expected = [ 
         VariableBindingExpression { 
             varData = ();
-            varName = Annotated { varName = "t1"; typeName = "int" };
+            varName = Annotated { varName = "t1"; typeName = Name "int" };
             value = LiteralExpression { data = (); literalValue = Int 3L }
         }
         VariableBindingExpression {
             varData = ();
-            varName = Annotated { varName = "t2"; typeName = "string" };
+            varName = Annotated { varName = "t2"; typeName = Name "string" };
             value = LiteralExpression { data = (); literalValue = String "test" }
         }
         VariableBindingExpression {
             varData = ();
-            varName = Annotated { varName = "t5"; typeName = "Foo" };
+            varName = Annotated { varName = "t5"; typeName = Name "Foo" };
             value = LiteralExpression { data = (); literalValue = Float 42.2 }
         }
     ]
@@ -195,8 +195,8 @@ let ``Block with parameters`` () =
             value = BlockExpression {
                 data = ()
                 parameters = [
-                    Annotated { varName = "a"; typeName = "Int" }
-                    Annotated { varName = "b"; typeName = "Int" }
+                    Annotated { varName = "a"; typeName = Name "Int" }
+                    Annotated { varName = "b"; typeName = Name "Int" }
                 ]
                 body = [
                     FunctionCallExpression {
@@ -213,7 +213,7 @@ let ``Block with parameters`` () =
         BlockExpression {
             data = ()
             parameters = [
-                Annotated { varName = "x"; typeName = "String" }
+                Annotated { varName = "x"; typeName = Name "String" }
             ]
             body = [
                 LiteralExpression { data = (); literalValue = String "test" }
