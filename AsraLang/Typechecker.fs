@@ -123,6 +123,12 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
 let typecheck (program: UntypedExpression) (externs: Extern list) =
     let init = { 
         context = Map.ofList (List.map (fun ext -> ext.asraName, ext.asraType) externs); 
-        types = Map.empty 
+        types = Map.ofList [ 
+            "Int", aint
+            "Float", afloat
+            "Bool", abool
+            "Unit", aunit
+            "String", astring
+        ]
     }
     typeExpr init program
