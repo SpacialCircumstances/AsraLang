@@ -34,7 +34,7 @@ let rec writeBlockBody (writeJs: StringBuilder -> TypedExpression -> StringBuild
             ) block.body
             writer
         | true ->
-            let noReturnExpressions = block.body.[ 0..(List.length block.body - 1) ]
+            let noReturnExpressions = block.body.[ 0..(List.length block.body - 2) ]
             List.iter (fun expr ->
                 writeJs writer expr |> ignore
                 writer.AppendLine(";") |> ignore
