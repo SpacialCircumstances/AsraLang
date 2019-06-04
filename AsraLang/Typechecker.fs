@@ -111,7 +111,7 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                             | [] ->
                                 let body = List.choose id body
                                 let rt = getType (List.last body)
-                                let bt = genFunType (List.map getType body) rt
+                                let bt = genFunType (List.map snd typedParams) rt
                                 let tblock: Block<AType> = { parameters = (List.map (fst >> Simple) typedParams); body = body; data = bt }
                                 Some (BlockExpression tblock), state, errors
                             | _ -> None, state, errors
