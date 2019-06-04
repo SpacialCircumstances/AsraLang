@@ -1,4 +1,4 @@
-factorial: Int => Int => Int = [ n: Int ->
+factorial: Int => Int = [ n: Int ->
     if [ == n 1 ] [ 1 ] [ factorial (- n 1) ]
 ]
 
