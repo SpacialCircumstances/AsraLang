@@ -1,0 +1,8 @@
+curryAdd = [ a: Int, b: Int -> 
+    a + b
+]
+x = curryAdd 2
+y = x 4
+z = x 6
+println (intToStr y)
+println (intToStr z)
