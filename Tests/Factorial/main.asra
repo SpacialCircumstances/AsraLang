@@ -1,0 +1,8 @@
+factorial: Int = [ n: Int ->
+    if [ == n 1 ] [ 1 ] [ factorial (- n 1) ]
+]
+
+a = factorial 1
+println (intToStr a)
+b = factorial 5
+println (intToStr b)
