@@ -46,21 +46,16 @@ let compile (CompilerParameters parameters) =
         | Error e ->
             [ ParserError e ]
         | Ok ast ->
-            try
-                let outFile = parameters.outputFile
-                let typedAst, _, errors = Typechecker.typecheck ast JsLibrary.externs
-                match typedAst, List.length errors with
-                    | Some typedAst, 0 ->
-                        let jsGen = genState (File.ReadAllText Config.currentConfig.preludePath) JsLibrary.externs
-                        let generatedJs = generateJs jsGen typedAst
-                        if (File.Exists outFile) then File.Delete outFile
-                        File.WriteAllText (outFile, generatedJs)
-                        []
-                    | _ ->
-                        List.map (fun e -> match e with
-                                            | Message.TypeError s -> TypeError s
-                                            | Message.Warning w -> Warning w) errors
-            with
-                | :? System.InvalidOperationException as ex -> [ TypeError ex.Message ]
-            
-
+            let outFile = parameters.outputFile
+            let typedAst, _, errors = Typechecker.typecheck ast JsLibrary.externs
+            match typedAst, List.length errors with
+                | Some typedAst, 0 ->
+                    let jsGen = genState (File.ReadAllText Config.currentConfig.preludePath) JsLibrary.externs
+                    let generatedJs = generateJs jsGen typedAst
+                    if (File.Exists outFile) then File.Delete outFile
+                    File.WriteAllText (outFile, generatedJs)
+                    []
+                | _ ->
+                    List.map (fun e -> match e with
+                                        | Message.TypeError s -> TypeError s
+                                        | Message.Warning w -> Warning w) errors
