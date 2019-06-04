@@ -64,7 +64,7 @@ let createParser (data: Parser<'data, unit>) =
     
     let annotatedDeclarationParser = ws >>. identifierParser .>> skipChar ':' .>> ws .>>. typeParser .>> ws |>> (fun (name, tp) -> Annotated { varName = name; typeName = tp }) |> attempt
     
-    let declarationParser = annotatedDeclarationParser <|> simpleDeclarationParser
+    let declarationParser = annotatedDeclarationParser <|> simpleDeclarationParser <!> "Declaration parser" <?> "Declaration"
     
     let variableDefinitionParser = data .>>. declarationParser .>> equalsParser .>> ws .>>. valueExpressionParser .>> ws |>> (fun ((data, decl), expr) -> VariableBindingExpression { varName = decl; value = expr; varData = data }) <!> "Variable definition parser"
     
