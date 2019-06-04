@@ -1,5 +1,5 @@
 curryAdd = [ a: Int, b: Int -> 
-    a + b
+    + a b
 ]
 x = curryAdd 2
 y = x 4
