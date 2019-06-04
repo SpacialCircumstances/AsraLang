@@ -19,6 +19,8 @@ let createParser (data: Parser<'data, unit>) =
     
     let (valueExpressionParser: Parser<Expression<'data>, unit>, valueExpressionParserRef) = createParserForwardedToRef ()
     
+    let (typeParser: Parser<TypeDeclaration, unit>, typeParserRef) = createParserForwardedToRef ()
+
     let isSeparator (c: char) = Char.IsWhiteSpace c || c = ';' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':' || c = '#'
     
     let isIdentifierStart (c: char) = (not (isDigit c)) && not (isSeparator c)
@@ -56,7 +58,13 @@ let createParser (data: Parser<'data, unit>) =
     
     let groupExpressionParser = between openParensParser closeParensParser expressionParser |>> GroupExpression <?> "Group expression" <!> "Group expression parser"
     
-    let typeParser = identifierParser |>> Name
+    let typeArrowParser = skipString "=>"
+
+    let namedTypeParser = identifierParser |>> Name
+
+    let functionTypeParser = namedTypeParser .>>? ws .>>? typeArrowParser .>> ws .>>. typeParser |>> Function
+
+    typeParserRef := functionTypeParser <|> namedTypeParser
     
     let equalsParser = pchar '='
     
