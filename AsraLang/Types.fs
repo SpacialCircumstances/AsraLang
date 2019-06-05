@@ -29,7 +29,7 @@ let rec returnType (funcT: AType) (paramTs: AType list): Result<AType, string> =
         | Native t -> 
             match List.length paramTs with
                 | 0 -> Ok funcT
-                | _ -> sprintf "Type %A is not a function" t |> Error
+                | _ -> sprintf "Cannot apply argument of %A to value of type %A" (List.head paramTs) t |> Error
         | FunctionType t -> 
             match List.tryHead paramTs with
                 | None -> Ok funcT //Currying
@@ -37,7 +37,7 @@ let rec returnType (funcT: AType) (paramTs: AType list): Result<AType, string> =
                     if pt = t.input then
                         returnType t.output (List.tail paramTs)
                     else
-                        sprintf "Expected type: %A, but got %A instead" t.input pt |> Error
+                        sprintf "Expected type for function application: %A, but got %A instead" t.input pt |> Error
 
 let rec appliedType (funcT: AType) (paramsCount: int) =
     if paramsCount = 0 then
