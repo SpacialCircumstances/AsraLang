@@ -15,6 +15,11 @@ let externs =
             genFunType [ aunit ] (aunit)
             genFunType [ aunit ] (aunit)
         ] (aunit); externName = "iffn" }
+        { asraName = "ifi"; asraType = genFunType [
+            genFunType [ aunit ] (abool)
+            genFunType [ aunit ] (aint)
+            genFunType [ aunit ] (aint)
+        ] (aunit); externName = "iffn" } //Bad hack until we have generics
         { asraName = "=="; asraType = genFunType [ aint; aint ] (abool); externName = "eq" }
         { asraName = "!="; asraType = genFunType [ aint; aint ] (abool); externName = "neq" }
         { asraName = "not"; asraType = genFunType [ abool ] (abool); externName = "not" }
