@@ -40,19 +40,38 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                 | None -> None, newState, errors
                 | Some subExpr -> Some (GroupExpression subExpr), newState, errors
         | VariableBindingExpression def ->
-            let result, _, errors = typeExpr state def.value
-            match result with
-                | Some result ->
-                    let valueType = getType result
-                    let name = match def.varName with
-                                | Simple s -> s
-                                | Annotated a -> a.varName
-                    let binding: VariableBinding<AType> = { varName = Simple name; varData = valueType; value = result }
-                    let newContext = Map.add name valueType state.context
-                    //TODO: Check type annotation if it matches
+            let name, newContext, errors = match def.varName with
+                                            | Simple s -> 
+                                                let typed, _, errors = typeExpr state def.value
+                                                match typed with
+                                                    | Some te ->
+                                                        Some (s, te), Map.add s (getType te) state.context, errors
+                                                    | None ->
+                                                        None, state.context, errors
+                                            | Annotated at ->
+                                                match (Map.tryFind at.typeName state.types) with
+                                                    | Some tp ->
+                                                        let ctx = Map.add at.varName tp state.context
+                                                        let typed, _, errors = typeExpr { state with context = ctx } def.value
+                                                        match typed with
+                                                            | Some te ->
+                                                                let infT = getType te
+                                                                match infT = tp with
+                                                                    | true ->
+                                                                        Some (at.varName, te), ctx, errors
+                                                                    | false ->
+                                                                        None, ctx, (sprintf "Annotated type: %A, but inferred: %A" tp infT |> TypeError) :: errors
+                                                            | None ->
+                                                                None, ctx, errors
+                                                    | None ->
+                                                        None, state.context, [sprintf "Undefined type: %A" at.typeName |> TypeError]
+            match name with
+                | None ->
+                    None, state, errors
+                | Some (name, typedExpr) ->
+                    let binding: VariableBinding<AType> = { varName = Simple name; varData = getType typedExpr; value = typedExpr }
                     let newState = { state with context = newContext }
                     Some (VariableBindingExpression binding), newState, errors
-                | None -> None, state, errors
         | VariableExpression (var, pos) ->
             let varType = Map.tryFind var state.context
             match varType with
