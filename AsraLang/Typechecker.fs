@@ -15,13 +15,21 @@ type Message =
 
 type State = {
     context: Map<string, AType>
-    types: Map<TypeDeclaration, AType>
+    types: Map<string, AType>
 }
 
 let formatPosition (pos: FParsec.Position) =
     sprintf "File: %s Line: %i Col: %i" pos.StreamName pos.Line pos.Column
 
-let resolveType (state: State) (typeName: TypeDeclaration) = Map.find typeName state.types
+let rec resolveType (state: State) (typeName: TypeDeclaration) = 
+    match typeName with
+        | Name typeName -> Map.tryFind typeName state.types
+        | Function (inp, out) -> 
+            match (resolveType state inp, resolveType state out) with
+                | Some inp, Some out ->
+                    FunctionType { input = inp; output = out } |> Some
+                | _ -> None
+
 
 let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression option * State * Message list =
     match expr with
@@ -49,7 +57,7 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                                                     | None ->
                                                         None, state.context, errors
                                             | Annotated at ->
-                                                match (Map.tryFind at.typeName state.types) with
+                                                match resolveType state at.typeName with
                                                     | Some tp ->
                                                         let ctx = Map.add at.varName tp state.context
                                                         let typed, _, errors = typeExpr { state with context = ctx } def.value
@@ -120,7 +128,10 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                     let parameters = block.parameters
                     let typedParams = List.choose (fun d -> match d with
                                                                 | Simple _ -> None
-                                                                | Annotated t -> (t.varName, resolveType state t.typeName) |> Some) parameters
+                                                                | Annotated t -> 
+                                                                    match resolveType state t.typeName with
+                                                                        | Some tp -> Some (t.varName, tp)
+                                                                        | None -> None) parameters
 
                     if (List.length typedParams) = (List.length parameters) then
                         let blockContext = List.fold (fun ctx (p, pt) -> Map.add p pt ctx) state.context typedParams
@@ -143,11 +154,11 @@ let typecheck (program: UntypedExpression) (externs: Extern list) =
     let init = { 
         context = Map.ofList (List.map (fun ext -> ext.asraName, ext.asraType) externs); 
         types = Map.ofList [ 
-            Name "Int", aint
-            Name "Float", afloat
-            Name "Bool", abool
-            Name "Unit", aunit
-            Name "String", astring
+            "Int", aint
+            "Float", afloat
+            "Bool", abool
+            "Unit", aunit
+            "String", astring
         ]
     }
     typeExpr init program
