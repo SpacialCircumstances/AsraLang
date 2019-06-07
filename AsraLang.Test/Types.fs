@@ -3,14 +3,7 @@
 open Ast
 open Types
 open Xunit
-
-let assertEqResult (expected: 'a) (got: Result<'a, 'b>) =
-    let gotR = match got with
-                    | Error e -> 
-                        Assert.True(false, e.ToString())
-                        invalidOp "Unreachable"
-                    | Ok g -> g
-    Assert.Equal<'a>(expected, gotR)
+open Asserts
 
 [<Fact>]
 let ``Call types`` () =
