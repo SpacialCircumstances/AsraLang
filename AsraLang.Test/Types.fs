@@ -68,9 +68,11 @@ let ``Type printing`` () =
     let t1 = astring
     let t2 = aunit
     let t3 = aint
+    let t4 = Generic "a"
     Assert.Equal("String", t1.ToString())
     Assert.Equal("Unit", t2.ToString())
     Assert.Equal("Int", t3.ToString())
+    Assert.Equal("'a", t4.ToString())
     let ft1 = FunctionType {
         input = t1;
         output = t3;
@@ -91,6 +93,11 @@ let ``Type printing`` () =
         output = t2;
     }
     Assert.Equal("(String -> Int) -> Unit", ft4.ToString())
+    let ft5 = FunctionType {
+        input = ft1
+        output = t4
+    }
+    Assert.Equal("(String -> Int) -> 'a", ft5.ToString())
     ()
 
 [<Fact>]
