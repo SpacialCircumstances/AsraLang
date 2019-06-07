@@ -28,8 +28,22 @@ let aunit = Native "Unit"
 let afloat = Native "Float"
 let abool = Native "Bool"
 
-let rec returnType (funcT: AType) (paramTs: AType list): Result<AType, string> =
+type Context = {
+    resolvedGenerics: Map<string, AType>
+}    
+
+let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list): Result<AType, string> =
+    let resolveGeneric t ctx = Map.tryFind t ctx.resolvedGenerics
+    let addGeneric gn gt ctx = { ctx with resolvedGenerics = Map.add gn gt ctx.resolvedGenerics }
+    
     match funcT with
+        | Generic t ->
+            match List.length paramTs with
+                | 0 -> 
+                    match resolveGeneric t ctx with
+                        | Some resG -> Ok resG
+                        | None -> Ok funcT //Stays generic because it is not resolved
+                | _ -> sprintf "Cannot apply argument of %A to value of type %A" (List.head paramTs) t |> Error
         | Native t -> 
             match List.length paramTs with
                 | 0 -> Ok funcT
@@ -37,11 +51,26 @@ let rec returnType (funcT: AType) (paramTs: AType list): Result<AType, string> =
         | FunctionType t -> 
             match List.tryHead paramTs with
                 | None -> Ok funcT //Currying
-                | Some pt ->
-                    if pt = t.input then
-                        returnType t.output (List.tail paramTs)
-                    else
-                        sprintf "Expected type for function application: %A, but got %A instead" t.input pt |> Error
+                | Some currentParamType ->
+                    match t.input with
+                        | Generic gt -> 
+                            match resolveGeneric gt ctx with
+                                | Some rt ->
+                                    if currentParamType = rt then
+                                        pReturnType ctx t.output (List.tail paramTs)
+                                    else
+                                        sprintf "Got %A instead of expected type for function application: %A, because %s was resolved to it earlier" currentParamType rt gt |> Error
+                                | None ->
+                                    //Generic was not resolved yet, so we add it for future usage
+                                    pReturnType (addGeneric gt currentParamType ctx) t.output (List.tail paramTs)
+                                    
+                        | _ ->
+                            if currentParamType = t.input then
+                                pReturnType ctx t.output (List.tail paramTs)
+                            else
+                                sprintf "Expected type for function application: %A, but got %A instead" t.input currentParamType |> Error
+
+let returnType = pReturnType { resolvedGenerics = Map.empty }
 
 let rec appliedType (funcT: AType) (paramsCount: int) =
     if paramsCount = 0 then
