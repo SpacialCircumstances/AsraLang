@@ -32,6 +32,10 @@ type Context = {
     resolvedGenerics: Map<string, AType>
 }    
 
+let rec private genericUnificationImpl (ctx: Context) (inType: AType) (outType: AType): Result<AType, unit> = invalidOp "Not implemented"
+
+let genericUnification = genericUnificationImpl { resolvedGenerics = Map.empty } 
+
 let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list): Result<AType, string> =
     let resolveGeneric t ctx = Map.tryFind t ctx.resolvedGenerics
     let addGeneric gn gt ctx = { ctx with resolvedGenerics = Map.add gn gt ctx.resolvedGenerics }
