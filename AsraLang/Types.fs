@@ -7,12 +7,16 @@ type FunType = {
 
 and AType = 
     | Native of string
+    | Generic of string
     | FunctionType of FunType
 with
     override x.ToString() = match x with
                                 | Native str -> str
+                                | Generic tp -> "'" + tp
                                 | FunctionType funt -> 
                                     match funt.input with
+                                        | Generic tp ->
+                                            sprintf "'%s -> %O" tp funt.output
                                         | Native tp ->
                                             sprintf "%s -> %O" tp funt.output
                                         | FunctionType ft ->

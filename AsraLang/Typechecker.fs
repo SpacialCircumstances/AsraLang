@@ -24,7 +24,7 @@ let formatPosition (pos: FParsec.Position) =
 let rec resolveType (state: State) (typeName: TypeDeclaration) = 
     match typeName with
         | Name typeName -> Map.tryFind typeName state.types
-        | Generic typeName -> invalidOp "Not implemented"
+        | Generic typeName -> Some (AType.Generic typeName)
         | Function (inp, out) -> 
             match (resolveType state inp, resolveType state out) with
                 | Some inp, Some out ->
