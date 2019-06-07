@@ -77,7 +77,8 @@ let rec appliedType (funcT: AType) (paramsCount: int) =
         Some funcT
     else
         match funcT with
-            | Native i -> None
+            | Native _ -> None
+            | Generic _ -> None
             | FunctionType ft -> appliedType ft.output (paramsCount - 1)
 
 let rec genFunType (paramTypes: AType list) (retType: AType) = 
