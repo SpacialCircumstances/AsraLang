@@ -1,5 +1,5 @@
 factorial: Int => Int = [ n: Int ->
-    ifi [ == n 1 ] [ 1 ] [ * (factorial (- n 1)) n ]
+    if [ == n 1 ] [ 1 ] [ * (factorial (- n 1)) n ]
 ]
 
 a = factorial 1
