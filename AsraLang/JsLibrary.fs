@@ -26,4 +26,6 @@ let externs =
         { asraName = "&"; asraType = genFunType [ abool; abool ] (abool); externName = "and" }
         { asraName = "|"; asraType = genFunType [ abool; abool ] (abool); externName = "or" }
         { asraName = "intToStr"; asraType = genFunType [ aint ] (astring); externName = "toStr" }
+        { asraName = "true"; asraType = abool; externName = "trueVal" }
+        { asraName = "false"; asraType = abool; externName = "falseVal" }
     ]
