@@ -28,4 +28,5 @@ let externs =
         { asraName = "intToStr"; asraType = genFunType [ aint ] (astring); externName = "toStr" }
         { asraName = "true"; asraType = abool; externName = "trueVal" }
         { asraName = "false"; asraType = abool; externName = "falseVal" }
+        { asraName = "toString"; asraType = genFunType [ Generic "a" ] astring; externName = "toStr" }
     ]

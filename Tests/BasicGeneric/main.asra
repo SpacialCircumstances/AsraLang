@@ -1,0 +1,5 @@
+println (toString 12)
+println (toString "test")
+println (toString 33.4)
+println (toString true)
+println (toString false)
