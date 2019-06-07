@@ -59,7 +59,7 @@ let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list):
                                     if currentParamType = rt then
                                         pReturnType ctx t.output (List.tail paramTs)
                                     else
-                                        sprintf "Got %A instead of expected type for function application: %A, because %s was resolved to it earlier" currentParamType rt gt |> Error
+                                        sprintf "Got %O instead of expected type for function application: %O, because '%s was resolved to it earlier" currentParamType rt gt |> Error
                                 | None ->
                                     //Generic was not resolved yet, so we add it for future usage
                                     pReturnType (addGeneric gt currentParamType ctx) t.output (List.tail paramTs)
@@ -68,7 +68,7 @@ let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list):
                             if currentParamType = t.input then
                                 pReturnType ctx t.output (List.tail paramTs)
                             else
-                                sprintf "Expected type for function application: %A, but got %A instead" t.input currentParamType |> Error
+                                sprintf "Expected type for function application: %O, but got %O instead" t.input currentParamType |> Error
 
 let returnType = pReturnType { resolvedGenerics = Map.empty }
 
