@@ -62,9 +62,11 @@ let createParser (data: Parser<'data, unit>) =
 
     let namedTypeParser = identifierParser |>> Name
 
+    let genericTypeParser = skipChar '\'' >>. identifierParser |>> Generic
+
     let functionTypeParser = namedTypeParser .>>? ws .>>? typeArrowParser .>> ws .>>. typeParser |>> Function
 
-    typeParserRef := functionTypeParser <|> namedTypeParser
+    typeParserRef := functionTypeParser <|> genericTypeParser <|> namedTypeParser
     
     let equalsParser = pchar '='
     

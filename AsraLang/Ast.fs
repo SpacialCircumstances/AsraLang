@@ -14,6 +14,7 @@ type Literal<'data> = {
 
 type TypeDeclaration =
     | Name of string
+    | Generic of string
     | Function of TypeDeclaration * TypeDeclaration
 
 type TypeAnnotated = { //TODO: Support complex types
