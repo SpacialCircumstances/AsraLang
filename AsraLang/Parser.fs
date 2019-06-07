@@ -66,7 +66,7 @@ let createParser (data: Parser<'data, unit>) =
 
     let functionTypeParser = namedTypeParser .>>? ws .>>? typeArrowParser .>> ws .>>. typeParser |>> Function
 
-    typeParserRef := functionTypeParser <|> genericTypeParser <|> namedTypeParser
+    typeParserRef := functionTypeParser <|> genericTypeParser <|> namedTypeParser <!> "Type parser" <?> "Type"
     
     let equalsParser = pchar '='
     
