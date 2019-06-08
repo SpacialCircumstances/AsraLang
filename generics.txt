@@ -49,3 +49,7 @@ Error, because 'a is String and cannot be Int
 Bool -> (Unit -> String) -> (Unit -> Int)
 Bool -> (Unit -> 'a) -> (Unit -> 'b) -> 'a
 OK with 'a: String, 'b: Int
+
+Bool -> (Unit -> String)
+Bool -> (Unit -> 'a) -> (Unit -> 'a) -> 'a
+(Unit -> String) -> String (currying)
