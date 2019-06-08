@@ -28,7 +28,7 @@ Error, because 'b would be restricted to String
 
 (String -> String) (String -> 'b)
 (String -> 'a) -> (String -> 'a) -> Bool 
-Bool, because 'b is in another function
+Bool, because 'b is in another function, 'a: String
 
 Bool -> (Unit -> String) -> (Unit -> String)
 Bool -> (Unit -> 'a) -> (Unit -> 'a) -> 'a
@@ -36,7 +36,7 @@ String, a: String
 
 Bool -> (Unit -> 'b) -> (Unit -> String)
 Bool -> (Unit -> 'a) -> (Unit -> 'a) -> 'a
-String, OK
+String, OK, 'a: String
 
 Bool -> (Unit -> 'b) -> (Unit -> 'b)
 Bool -> (Unit -> 'a) -> (Unit -> 'a) -> 'a

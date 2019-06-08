@@ -16,6 +16,7 @@ let ``Generic 2`` () =
     let pt = genFunType [ astring ] astring
     let (res, ctx) = genericUnification ft pt
     assertEqResult afloat res
+    assertGenericContext ctx "a" astring
 
 let ``Generic 3`` () =
     let ft = genFunType [ 
@@ -24,6 +25,7 @@ let ``Generic 3`` () =
     let pt = genFunType [ astring ] (genFunType [ Generic "a"; Generic "a" ] abool)
     let (res, ctx) = genericUnification ft pt
     assertEqResult astring res
+    assertGenericContextEmpty ctx "a"
 
 let ``Generic 4`` () =
     let ft = genFunType [ 
@@ -32,6 +34,7 @@ let ``Generic 4`` () =
     let pt = genFunType [ astring ] (genFunType [ astring; astring ] abool)
     let (res, ctx) = genericUnification ft pt
     assertEqResult astring res
+    assertGenericContext ctx "a" astring
 
 let ``Generic 5`` () =
     let ft = genFunType [ 
@@ -40,6 +43,8 @@ let ``Generic 5`` () =
     let pt = genFunType [ astring ] (genFunType [ Generic "b"; astring ] abool)
     let (res, ctx) = genericUnification ft pt
     assertEqResult astring res
+    assertGenericContext ctx "a" astring
+    assertGenericContext ctx "b" astring
 
 let ``Generic 6`` () =
     let ft = genFunType [ 
@@ -62,6 +67,7 @@ let ``Generic 8`` () =
         genFunType [ astring ] astring ] (genFunType [ astring ] (Generic "b"))
     let (res, ctx) = genericUnification ft pt
     assertEqResult abool res
+    assertGenericContext ctx "a" astring
 
 let ``Generic 9`` () =
     let ft = genFunType [
@@ -72,6 +78,7 @@ let ``Generic 9`` () =
     let pt = genFunType [ abool; p1 ] p1
     let (res, ctx) = genericUnification ft pt
     assertEqResult astring res
+    assertGenericContext ctx "a" astring
 
 let ``Generic 10`` () =
     let ft = genFunType [
@@ -83,6 +90,7 @@ let ``Generic 10`` () =
         (genFunType [ aunit ] (Generic "b")) ] (genFunType [ aunit ] astring)
     let (res, ctx) = genericUnification ft pt
     assertEqResult astring res
+    assertGenericContext ctx "a" astring
 
 let ``Generic 11`` () =
     let ft = genFunType [
@@ -94,6 +102,7 @@ let ``Generic 11`` () =
         genFunType [ aunit ] (Generic "b") ] (genFunType [ aunit ] (Generic "b"))
     let (res, ctx) = genericUnification ft pt
     assertEqResult (Generic "b") res
+    assertGenericContext ctx "a" (Generic "b") //Can fail
 
 let ``Generic 12`` () =
     let ft = genFunType [
@@ -116,6 +125,8 @@ let ``Generic 13`` () =
         (genFunType [ aunit ] astring) ] (genFunType [ aunit ] aint)
     let (res, ctx) = genericUnification ft pt
     assertEqResult astring res
+    assertGenericContext ctx "a" astring
+    assertGenericContext ctx "b" aint
 
 let ``Generic 14`` () =
     let ft = genFunType [
@@ -126,3 +137,4 @@ let ``Generic 14`` () =
     let exp = genFunType [ (genFunType [ aunit ] astring) ] astring
     let (res, ctx) = genericUnification ft pt
     assertEqResult exp res
+    assertGenericContext ctx "a" astring

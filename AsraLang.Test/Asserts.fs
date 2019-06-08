@@ -2,10 +2,18 @@
 
 open Xunit
 open Ast
+open Types
 
 let assertError = fun res -> Assert.True (match res with
                                             | Ok _ -> false
                                             | Error _ -> true)
+
+let assertGenericContext (ctx: Context) (key: string) (expected: AType) =
+    Assert.True (Map.containsKey key ctx.resolvedGenerics)
+    let genT = Map.find key ctx.resolvedGenerics
+    Assert.Equal (expected, genT)
+
+let assertGenericContextEmpty (ctx: Context) (key: string) = Assert.False (Map.containsKey key ctx.resolvedGenerics)
 
 let assertEqResult (expected: 'a) (got: Result<'a, 'b>) =
     let gotR = match got with
