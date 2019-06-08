@@ -32,7 +32,7 @@ type Context = {
     resolvedGenerics: Map<string, AType>
 }    
 
-let rec private genericUnificationImpl (ctx: Context) (inType: AType) (outType: AType): Result<AType, unit> = invalidOp "Not implemented"
+let rec private genericUnificationImpl (ctx: Context) (inType: AType) (outType: AType): Result<AType, unit> * Context = invalidOp "Not implemented"
 
 let genericUnification = genericUnificationImpl { resolvedGenerics = Map.empty } 
 
