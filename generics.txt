@@ -16,7 +16,7 @@ String, 'a: String
 
 String -> ('b -> String -> Bool)
 String -> ('a -> 'a -> Bool) -> String
-String, 'a: String
+String, 'a: String, 'b: String
 
 String -> (Int -> String -> Bool)
 String -> ('a -> 'a -> Bool) -> String

@@ -16,3 +16,19 @@ let ``Generic 2`` () =
     let pt = genFunType [ astring ] astring
     let res = genericUnification ft pt
     assertEqResult afloat res
+
+let ``Generic 3`` () =
+    let ft = genFunType [ 
+        astring
+        (genFunType [ Generic "a"; Generic "a" ] abool) ] astring
+    let pt = genFunType [ astring ] (genFunType [ Generic "a"; Generic "a" ] abool)
+    let res = genericUnification ft pt
+    assertEqResult astring res
+
+let ``Generic 4`` () =
+    let ft = genFunType [ 
+        astring
+        (genFunType [ Generic "a"; Generic "a" ] abool) ] astring
+    let pt = genFunType [ astring ] (genFunType [ astring; astring ] abool)
+    let res = genericUnification ft pt
+    assertEqResult astring res
