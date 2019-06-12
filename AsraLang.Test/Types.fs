@@ -24,9 +24,9 @@ let ``Call types`` () =
         input = aint;
         output = astring;
     }
-    assertEqResult pr1 (returnType funcT p1)
-    assertEqResult astring (returnType funcT p2)
-    Assert.True(match returnType funcT p3 with
+    assertEqResult pr1 (returnType funcT p1 |> fst)
+    assertEqResult astring (returnType funcT p2 |> fst)
+    Assert.True(match returnType funcT p3 |> fst with
                 | Error _ -> true
                 | Ok _ -> false)
 

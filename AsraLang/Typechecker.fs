@@ -100,7 +100,7 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                         match funExp with
                             | Some funExp ->
                                 let funType = getType funExp
-                                match returnType funType (List.map getType args) with
+                                match returnType funType (List.map getType args) |> fst with
                                     | Ok retType ->
                                         let call: FunctionCall<AType> = { func = funExp; args = args; data = retType }
                                         Some (FunctionCallExpression call), state, []
