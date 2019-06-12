@@ -11,6 +11,7 @@ let ``Generic 1`` () =
     let (res, ctx) = returnType ft pt
     assertError res
 
+[<Fact>]
 let ``Generic 2`` () =
     let ft = genFunType [ Generic "a"; astring ] afloat
     let pt = [ astring; astring ]
@@ -18,6 +19,7 @@ let ``Generic 2`` () =
     assertEqResult afloat res
     assertGenericContext ctx "a" astring
 
+[<Fact>]    
 let ``Generic 3`` () =
     let ft = genFunType [ 
         astring
@@ -27,6 +29,7 @@ let ``Generic 3`` () =
     assertEqResult astring res
     assertGenericContextEmpty ctx "a"
 
+[<Fact>]
 let ``Generic 4`` () =
     let ft = genFunType [ 
         astring
@@ -35,7 +38,8 @@ let ``Generic 4`` () =
     let (res, ctx) = returnType ft pt
     assertEqResult astring res
     assertGenericContext ctx "a" astring
-
+    
+[<Fact>]
 let ``Generic 5`` () =
     let ft = genFunType [ 
         astring
@@ -46,6 +50,7 @@ let ``Generic 5`` () =
     assertGenericContext ctx "a" astring
     assertGenericContext ctx "b" astring
 
+[<Fact>]
 let ``Generic 6`` () =
     let ft = genFunType [ 
         astring
@@ -54,12 +59,14 @@ let ``Generic 6`` () =
     let (res, ctx) = returnType ft pt
     assertError res
 
+[<Fact>]
 let ``Generic 7`` () =
     let ft = genFunType [ Generic "a"; Generic "a" ] abool
     let pt = [ astring; (Generic "b") ]
     let (res, ctx) = returnType ft pt
     assertError res
 
+[<Fact>]
 let ``Generic 8`` () =
     let p = genFunType [ astring ] (Generic "a")
     let ft = genFunType [ p; p ] abool
@@ -70,6 +77,7 @@ let ``Generic 8`` () =
     assertEqResult abool res
     assertGenericContext ctx "a" astring
 
+[<Fact>]
 let ``Generic 9`` () =
     let ft = genFunType [
         abool
@@ -81,6 +89,7 @@ let ``Generic 9`` () =
     assertEqResult astring res
     assertGenericContext ctx "a" astring
 
+[<Fact>]
 let ``Generic 10`` () =
     let ft = genFunType [
         abool
@@ -94,6 +103,7 @@ let ``Generic 10`` () =
     assertEqResult astring res
     assertGenericContext ctx "a" astring
 
+[<Fact>]
 let ``Generic 11`` () =
     let ft = genFunType [
         abool
@@ -107,6 +117,7 @@ let ``Generic 11`` () =
     assertEqResult (Generic "b") res
     assertGenericContext ctx "a" (Generic "b") //Can fail
 
+[<Fact>]
 let ``Generic 12`` () =
     let ft = genFunType [
         abool
@@ -119,6 +130,7 @@ let ``Generic 12`` () =
     let (res, ctx) = returnType ft pt
     assertError res
 
+[<Fact>]
 let ``Generic 13`` () =
     let ft = genFunType [
         abool
@@ -133,6 +145,7 @@ let ``Generic 13`` () =
     assertGenericContext ctx "a" astring
     assertGenericContext ctx "b" aint
 
+[<Fact>]
 let ``Generic 14`` () =
     let ft = genFunType [
         abool
