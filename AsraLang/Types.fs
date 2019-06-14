@@ -32,8 +32,28 @@ type Context = {
     resolvedGenerics: Map<string, AType>
 }    
 
-let private resolveGeneric t ctx = Map.tryFind t ctx.resolvedGenerics
-let private addGeneric gn gt ctx = { ctx with resolvedGenerics = Map.add gn gt ctx.resolvedGenerics }
+let private resolveGeneric (t: string) (ctx: Context) = Map.tryFind t ctx.resolvedGenerics
+let private addGeneric (gn: string) (gt: AType) (ctx: Context) = { ctx with resolvedGenerics = Map.add gn gt ctx.resolvedGenerics }
+
+let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
+    match inT with
+        | Native _ ->
+            match paramT with
+                | Native _ ->
+                    if inT = paramT then
+                        Ok (), ctx
+                    else
+                        Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx
+                | FunctionType _ ->
+                    Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx
+                | Generic _ ->
+                    Error (sprintf "Due to expected type of %A, the argument of %A would be restricted" inT paramT), ctx
+        | Generic g ->
+            match resolveGeneric g ctx with
+                | Some resolvedT -> genericEqFirst resolvedT paramT ctx
+                | None ->
+                    Ok (), addGeneric g paramT ctx
+                    
 
 let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list): Result<AType, string> * Context =
     match List.tryHead paramTs with
@@ -45,10 +65,9 @@ let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list):
                 | FunctionType ft ->
                     let inT = ft.input
                     let outT = ft.output
-                    if inT = nextParam then
-                        pReturnType ctx outT (List.tail paramTs)
-                    else
-                        Error (sprintf "Expected argument of type: %A, but got: %A" inT nextParam), ctx
+                    match genericEqFirst inT nextParam ctx with
+                        | Ok _, newCtx -> pReturnType newCtx outT (List.tail paramTs)
+                        | Error e, newCtx -> Error e, newCtx
 
 let returnType = pReturnType { resolvedGenerics = Map.empty }
 
