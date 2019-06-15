@@ -32,7 +32,15 @@ type Context = {
     resolvedGenerics: Map<string, AType>
 }    
 
-let private resolveGeneric (t: string) (ctx: Context) = Map.tryFind t ctx.resolvedGenerics
+let rec resolveGeneric (t: string) (ctx: Context) = 
+    match Map.tryFind t ctx.resolvedGenerics with
+        | None -> None
+        | Some t -> match t with
+                        | Generic gt -> match resolveGeneric gt ctx with
+                                        | None -> Some t
+                                        | Some x -> Some x
+                        | _ -> Some t
+
 let private addGeneric (gn: string) (gt: AType) (ctx: Context) = { ctx with resolvedGenerics = Map.add gn gt ctx.resolvedGenerics }
 
 let rec private genericEqFun (inT: FunType) (paramT: FunType) (ctx: Context) (genEq: AType -> AType -> Context -> Result<unit, string> * Context) = 

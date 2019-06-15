@@ -9,9 +9,9 @@ let assertError = fun res -> Assert.True (match res with
                                             | Error _ -> true)
 
 let assertGenericContext (ctx: Context) (key: string) (expected: AType) =
-    Assert.True (Map.containsKey key ctx.resolvedGenerics)
-    let genT = Map.find key ctx.resolvedGenerics
-    Assert.Equal (expected, genT)
+    match resolveGeneric key ctx with
+        | None -> Assert.True(false)
+        | Some g -> Assert.Equal(expected, g)
 
 let assertGenericContextEmpty (ctx: Context) (key: string) = Assert.False (Map.containsKey key ctx.resolvedGenerics)
 
