@@ -35,6 +35,24 @@ type Context = {
 let private resolveGeneric (t: string) (ctx: Context) = Map.tryFind t ctx.resolvedGenerics
 let private addGeneric (gn: string) (gt: AType) (ctx: Context) = { ctx with resolvedGenerics = Map.add gn gt ctx.resolvedGenerics }
 
+let rec private genericEqFun (inT: FunType) (paramT: FunType) (ctx: Context) (genEq: AType -> AType -> Context -> Result<unit, string> * Context) = 
+    if inT = paramT then
+        Ok (), ctx
+    else
+        let inputT = match inT.input with
+                        | FunctionType iipT -> 
+                            match paramT.input with
+                                | FunctionType piT ->
+                                    genericEqFun iipT piT ctx genEq
+                                | _ ->
+                                    Error "", ctx
+                        | _ -> genEq inT.input paramT.input ctx
+
+        match inputT with
+            | Ok _, ctx -> 
+                genEq inT.output paramT.output ctx
+            | Error e, ctx -> Error e, ctx
+
 let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
     match inT with
         | Native _ ->
@@ -53,7 +71,12 @@ let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
                 | Some resolvedT -> genericEqFirst resolvedT paramT ctx
                 | None ->
                     Ok (), addGeneric g paramT ctx
-                    
+        | FunctionType ft ->
+            match paramT with
+                | FunctionType pft ->
+                    genericEqFun ft pft ctx genericEqFirst
+                | _ -> 
+                    Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx
 
 let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list): Result<AType, string> * Context =
     match List.tryHead paramTs with
