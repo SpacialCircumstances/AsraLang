@@ -1,4 +1,4 @@
-curryAdd = [ a: Int, b: Int -> 
+curryAdd = [ a: Number, b: Number -> 
     + a b
 ]
 x = curryAdd 2

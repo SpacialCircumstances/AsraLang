@@ -6,10 +6,10 @@ open Typechecker
 let externs = 
     [
         { asraName = "println"; asraType = genFunType [ Generic "a" ] (aunit); externName = "println" }
-        { asraName = "+"; asraType = genFunType [ aint; aint ] (aint); externName = "add" }
-        { asraName = "-"; asraType = genFunType [ aint; aint ] (aint); externName = "subtract" }
-        { asraName = "*"; asraType = genFunType [ aint; aint ] (aint); externName = "multiply" }
-        { asraName = "/"; asraType = genFunType [ aint; aint ] (aint); externName = "divide" }
+        { asraName = "+"; asraType = genFunType [ anumber; anumber ] (anumber); externName = "add" }
+        { asraName = "-"; asraType = genFunType [ anumber; anumber ] (anumber); externName = "subtract" }
+        { asraName = "*"; asraType = genFunType [ anumber; anumber ] (anumber); externName = "multiply" }
+        { asraName = "/"; asraType = genFunType [ anumber; anumber ] (anumber); externName = "divide" }
         { asraName = "if"; asraType = genFunType [
             genFunType [ aunit ] (abool)
             genFunType [ aunit ] (Generic "a")

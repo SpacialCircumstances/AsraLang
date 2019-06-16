@@ -8,20 +8,20 @@ open Asserts
 [<Fact>]
 let ``Call types`` () =
     let funcT = FunctionType {
-        input = aint;
+        input = anumber;
         output = FunctionType {
-            input = aint;
+            input = anumber;
             output = FunctionType {
-                input = aint;
+                input = anumber;
                 output = astring;
             }
         }
     }
-    let p1 = [ aint; aint ]
-    let p2 = [ aint; aint; aint ]
-    let p3 = [ aint; afloat; astring ]
+    let p1 = [ anumber; anumber ]
+    let p2 = [ anumber; anumber; anumber ]
+    let p3 = [ anumber; anumber; astring ]
     let pr1 = FunctionType {
-        input = aint;
+        input = anumber;
         output = astring;
     }
     assertEqResult pr1 (returnType funcT p1 |> fst)
@@ -35,22 +35,22 @@ let ``Block types`` () =
     let p1 = [
         astring
         FunctionType {
-            input = aint;
+            input = anumber;
             output = astring;
         }
-        aint
+        anumber
     ]
-    let bt = genFunType p1 afloat
+    let bt = genFunType p1 anumber
     let expected = FunctionType {
         input = astring;
         output = FunctionType {
             input = FunctionType {
-                input = aint;
+                input = anumber;
                 output = astring;
             }
             output = FunctionType {
-                input = aint;
-                output = afloat;
+                input = anumber;
+                output = anumber;
             }
         }
     }
@@ -60,37 +60,37 @@ let ``Block types`` () =
 let ``Type printing`` () =
     let t1 = astring
     let t2 = aunit
-    let t3 = aint
+    let t3 = anumber
     let t4 = Generic "a"
     Assert.Equal("String", t1.ToString())
     Assert.Equal("Unit", t2.ToString())
-    Assert.Equal("Int", t3.ToString())
+    Assert.Equal("Number", t3.ToString())
     Assert.Equal("'a", t4.ToString())
     let ft1 = FunctionType {
         input = t1;
         output = t3;
     }
-    Assert.Equal("String -> Int", ft1.ToString())
+    Assert.Equal("String -> Number", ft1.ToString())
     let ft2 = FunctionType {
         input = t2;
         output = t3;
     }
-    Assert.Equal("Unit -> Int", ft2.ToString())
+    Assert.Equal("Unit -> Number", ft2.ToString())
     let ft3 = FunctionType {
         input = t1;
         output = ft2;
     }
-    Assert.Equal("String -> Unit -> Int", ft3.ToString())
+    Assert.Equal("String -> Unit -> Number", ft3.ToString())
     let ft4 = FunctionType {
         input = ft1;
         output = t2;
     }
-    Assert.Equal("(String -> Int) -> Unit", ft4.ToString())
+    Assert.Equal("(String -> Number) -> Unit", ft4.ToString())
     let ft5 = FunctionType {
         input = ft1
         output = t4
     }
-    Assert.Equal("(String -> Int) -> 'a", ft5.ToString())
+    Assert.Equal("(String -> Number) -> 'a", ft5.ToString())
     ()
 
 [<Fact>]
@@ -99,28 +99,28 @@ let ``Apply by arg count`` () =
         input = astring;
         output = FunctionType {
             input = FunctionType {
-                input = aint;
+                input = anumber;
                 output = astring;
             }
             output = FunctionType {
-                input = aint;
-                output = afloat;
+                input = anumber;
+                output = anumber;
             }
         }
     }
     let e1 = FunctionType {
         input = FunctionType {
-            input = aint;
+            input = anumber;
             output = astring;
         }
         output = FunctionType {
-            input = aint;
-            output = afloat } } |> Some
+            input = anumber;
+            output = anumber } } |> Some
 
     let e2 = FunctionType {
-        input = aint
-        output = afloat } |> Some
-    let e3 = afloat |> Some
+        input = anumber
+        output = anumber } |> Some
+    let e3 = anumber |> Some
     let e4 = None
     Assert.Equal(e1, appliedType ft 1)
     Assert.Equal(e2, appliedType ft 2)

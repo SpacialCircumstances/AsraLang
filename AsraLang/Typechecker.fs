@@ -39,9 +39,9 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                                     | LiteralValue.String str ->
                                         String str, astring
                                     | LiteralValue.Int i ->
-                                        Int i, aint 
+                                        Int i, anumber 
                                     | LiteralValue.Float f ->
-                                        Float f, afloat
+                                        Float f, anumber
             Some (LiteralExpression { data = litType; literalValue = literal }), state, []
         | GroupExpression e ->
             let subExpr, newState, errors = typeExpr state e
@@ -155,8 +155,7 @@ let typecheck (program: UntypedExpression) (externs: Extern list) =
     let init = { 
         context = Map.ofList (List.map (fun ext -> ext.asraName, ext.asraType) externs); 
         types = Map.ofList [ 
-            "Int", aint
-            "Float", afloat
+            "Number", anumber
             "Bool", abool
             "Unit", aunit
             "String", astring

@@ -6,17 +6,17 @@ open Asserts
 
 [<Fact>]
 let ``Generic 1`` () =
-    let ft = genFunType [ astring; astring ] afloat
+    let ft = genFunType [ astring; astring ] anumber
     let pt = [ Generic "a"; astring ]
     let (res, ctx) = returnType ft pt
     assertError res
 
 [<Fact>]
 let ``Generic 2`` () =
-    let ft = genFunType [ Generic "a"; astring ] afloat
+    let ft = genFunType [ Generic "a"; astring ] anumber
     let pt = [ astring; astring ]
     let (res, ctx) = returnType ft pt
-    assertEqResult afloat res
+    assertEqResult anumber res
     assertGenericContext ctx "a" astring
 
 [<Fact>]
@@ -54,7 +54,7 @@ let ``Generic 6`` () =
     let ft = genFunType [ 
         astring
         (genFunType [ Generic "a"; Generic "a" ] abool) ] astring
-    let pt = [ astring; (genFunType [ aint; astring ] abool) ]
+    let pt = [ astring; (genFunType [ anumber; astring ] abool) ]
     let (res, ctx) = returnType ft pt
     assertError res
 
@@ -124,7 +124,7 @@ let ``Generic 12`` () =
     let pt = [ 
         abool
         (genFunType [ aunit ] astring)
-        (genFunType [ aunit ] aint) ]
+        (genFunType [ aunit ] anumber) ]
     let (res, ctx) = returnType ft pt
     assertError res
 
@@ -137,11 +137,11 @@ let ``Generic 13`` () =
     let pt = [ 
         abool
         (genFunType [ aunit ] astring)
-        (genFunType [ aunit ] aint) ]
+        (genFunType [ aunit ] anumber) ]
     let (res, ctx) = returnType ft pt
     assertEqResult astring res
     assertGenericContext ctx "a" astring
-    assertGenericContext ctx "b" aint
+    assertGenericContext ctx "b" anumber
 
 [<Fact>]
 let ``Generic 14`` () =

@@ -22,10 +22,9 @@ with
                                         | FunctionType ft ->
                                             sprintf "(%O -> %O) -> %O" ft.input ft.output funt.output
 
-let aint = Native "Int"
+let anumber = Native "Number"
 let astring = Native "String"
 let aunit = Native "Unit"
-let afloat = Native "Float"
 let abool = Native "Bool"
 
 type Context = {

@@ -1,10 +1,10 @@
 'a -> String
-String -> String -> Float
+String -> String -> Number
 Error, because 'a is restricted to String
 
 String -> String
-'a -> String -> Float
-Float, 'a: String
+'a -> String -> Number
+Number, 'a: String
 
 String -> ('a -> 'a -> Bool)
 String -> ('a -> 'a -> Bool) -> String
@@ -18,9 +18,9 @@ String -> ('b -> String -> Bool)
 String -> ('a -> 'a -> Bool) -> String
 String, 'a: String, 'b: String
 
-String -> (Int -> String -> Bool)
+String -> (Number -> String -> Bool)
 String -> ('a -> 'a -> Bool) -> String
-Error, because 'a is Int and cannot be String
+Error, because 'a is Number and cannot be String
 
 String -> 'b
 'a -> 'a -> Bool
@@ -42,13 +42,13 @@ Bool -> (Unit -> 'b) -> (Unit -> 'b)
 Bool -> (Unit -> 'a) -> (Unit -> 'a) -> 'a
 'a: 'b
 
-Bool -> (Unit -> String) -> (Unit -> Int)
+Bool -> (Unit -> String) -> (Unit -> Number)
 Bool -> (Unit -> 'a) -> (Unit -> 'a) -> 'a
-Error, because 'a is String and cannot be Int
+Error, because 'a is String and cannot be Number
 
-Bool -> (Unit -> String) -> (Unit -> Int)
+Bool -> (Unit -> String) -> (Unit -> Number)
 Bool -> (Unit -> 'a) -> (Unit -> 'b) -> 'a
-OK with 'a: String, 'b: Int
+OK with 'a: String, 'b: Number
 
 Bool -> (Unit -> String)
 Bool -> (Unit -> 'a) -> (Unit -> 'a) -> 'a
