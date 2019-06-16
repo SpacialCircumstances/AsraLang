@@ -14,7 +14,7 @@ let externs =
             genFunType [ aunit ] (abool)
             genFunType [ aunit ] (Generic "a")
             genFunType [ aunit ] (Generic "a")
-        ] (aunit); externName = "iffn" }
+        ] (Generic "a"); externName = "iffn" }
         { asraName = "=="; asraType = genFunType [ Generic "a"; Generic "a" ] (abool); externName = "eq" }
         { asraName = "!="; asraType = genFunType [ aint; aint ] (abool); externName = "neq" }
         { asraName = "not"; asraType = genFunType [ abool ] (abool); externName = "not" }
