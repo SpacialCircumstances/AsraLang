@@ -48,7 +48,6 @@ let ``Generic 5`` () =
     let (res, ctx) = returnType ft pt
     assertEqResult astring res
     assertGenericContext ctx "a" astring
-    assertGenericContext ctx "b" astring
 
 [<Fact>]
 let ``Generic 6`` () =

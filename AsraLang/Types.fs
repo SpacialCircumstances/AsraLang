@@ -42,9 +42,7 @@ let rec resolveGeneric (t: string) (ctx: Context) =
                         | _ -> Some t
 
 let private addGeneric (gn: string) (gt: AType) (ctx: Context) = 
-    if gt <> (Generic gn) then
-        { ctx with resolvedGenerics = Map.add gn gt ctx.resolvedGenerics }
-    else ctx
+    { ctx with resolvedGenerics = Map.add gn gt ctx.resolvedGenerics }
 
 let private simpleTypeEq (inT: AType) (paramT: AType) (ctx: Context) =
     if inT = paramT then
@@ -63,13 +61,13 @@ let rec private genericEqFun (inT: AType) (paramT: AType) (ctx: Context) =
                 | Error e, newCtx -> Error e, newCtx
         | Native _, Generic _ -> Ok (), ctx //Ok because the generic is in a function passed as argument
         | Generic iGT, Generic pGT ->
-            Ok (), addGeneric iGT paramT ctx
+            Ok (), ctx
         | Generic iGT, Native pNT ->
             match resolveGeneric iGT ctx with
                 | None -> Ok (),  addGeneric iGT paramT ctx
                 | Some rIGT ->
-                    match rIGT with
-                        | Generic r -> Ok (), addGeneric r paramT ctx
+                    match rIGT with 
+                        | Generic _ -> Ok (), addGeneric iGT paramT ctx
                         | _ -> genericEqFun rIGT paramT ctx
         | _ -> Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx            
 
