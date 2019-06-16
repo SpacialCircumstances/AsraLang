@@ -53,9 +53,7 @@ let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
     match inT, paramT with
         | Native iNT, Native pNT ->
             simpleTypeEq inT paramT ctx
-        | Generic iGT, Generic pGT ->
-            Ok (), ctx //TODO
-        | Generic iGT, Native pNT ->
+        | Generic iGT, _ ->
             match resolveGeneric iGT ctx with
                 | None ->
                     Ok (), addGeneric iGT paramT ctx
