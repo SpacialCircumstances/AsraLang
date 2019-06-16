@@ -41,7 +41,10 @@ let rec resolveGeneric (t: string) (ctx: Context) =
                                         | Some x -> Some x
                         | _ -> Some t
 
-let private addGeneric (gn: string) (gt: AType) (ctx: Context) = { ctx with resolvedGenerics = Map.add gn gt ctx.resolvedGenerics }
+let private addGeneric (gn: string) (gt: AType) (ctx: Context) = 
+    if gt <> (Generic gn) then
+        { ctx with resolvedGenerics = Map.add gn gt ctx.resolvedGenerics }
+    else ctx
 
 let private simpleTypeEq (inT: AType) (paramT: AType) (ctx: Context) =
     if inT = paramT then
