@@ -49,6 +49,23 @@ let private simpleTypeEq (inT: AType) (paramT: AType) (ctx: Context) =
     else
         Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx
 
+let rec private genericEqFun (inT: AType) (paramT: AType) (ctx: Context) =
+    match inT, paramT with
+        | Native _, Native _ ->
+            simpleTypeEq inT paramT ctx
+        | FunctionType fIT, FunctionType pIT ->
+            match genericEqFun fIT.input pIT.input ctx with
+                | Ok _, newCtx ->
+                    genericEqFun fIT.output pIT.output newCtx
+                | Error e, newCtx -> Error e, newCtx
+        | Native _, Generic _ ->
+            Ok (), ctx //Ok because the generic is in a function passed as argument
+        | Generic iGT, Generic pGT ->
+            Ok (), ctx
+        | Generic iGT, Native pNT ->
+            Ok (),  addGeneric iGT paramT ctx
+        | _ -> Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx            
+
 let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
     match inT, paramT with
         | Native iNT, Native pNT ->
@@ -62,7 +79,7 @@ let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
         | Native iNT, Generic pGT ->
             Error (sprintf "Expected argument of type: %A, but got: %A. %A would be restricted." inT paramT paramT), ctx
         | FunctionType fIT, FunctionType pIT ->
-            Ok (), ctx //TODO
+            genericEqFun inT paramT ctx
         | _ -> Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx
 
 let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list): Result<AType, string> * Context =
