@@ -113,7 +113,7 @@ let ``Generic 11`` () =
         genFunType [ aunit ] (Generic "b")
         (genFunType [ aunit ] (Generic "b")) ]
     let (res, ctx) = returnType ft pt
-    assertEqResult (Generic "b") res
+    assertEqResult (Generic "a") res
     assertGenericContext ctx "a" (Generic "b") //Can fail
 
 [<Fact>]
