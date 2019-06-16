@@ -1,4 +1,4 @@
-﻿const println = console.log;
+﻿const println = (a) => console.log(a.toString());
 const add = (a) => (b) => a + b;
 const subtract = (a) => (b) => a - b;
 const multiply = (a) => (b) => a * b;

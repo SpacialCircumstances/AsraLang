@@ -3,6 +3,6 @@ factorial: Int => Int = [ n: Int ->
 ]
 
 a = factorial 1
-println (intToStr a)
+println a
 b = factorial 5
-println (intToStr b)
+println a
