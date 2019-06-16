@@ -53,3 +53,7 @@ OK with 'a: String, 'b: Int
 Bool -> (Unit -> String)
 Bool -> (Unit -> 'a) -> (Unit -> 'a) -> 'a
 (Unit -> String) -> String (currying)
+
+(String -> 'b) (String -> String)
+(String -> 'a) -> (String -> 'a) -> Bool 
+Bool, because 'b is in another function, 'a: String

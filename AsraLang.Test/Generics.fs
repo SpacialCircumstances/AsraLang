@@ -156,3 +156,14 @@ let ``Generic 14`` () =
     let (res, ctx) = returnType ft pt
     assertEqResult exp res
     assertGenericContext ctx "a" astring
+
+[<Fact>]
+let ``Generic 15`` () =
+    let p = genFunType [ astring ] (Generic "a")
+    let ft = genFunType [ p; p ] abool
+    let pt = [
+        genFunType [ astring ] (Generic "b")
+        genFunType [ astring ] astring ]
+    let (res, ctx) = returnType ft pt
+    assertEqResult abool res
+    assertGenericContext ctx "a" astring
