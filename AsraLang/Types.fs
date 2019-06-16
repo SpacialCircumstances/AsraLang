@@ -58,12 +58,16 @@ let rec private genericEqFun (inT: AType) (paramT: AType) (ctx: Context) =
                 | Ok _, newCtx ->
                     genericEqFun fIT.output pIT.output newCtx
                 | Error e, newCtx -> Error e, newCtx
-        | Native _, Generic _ ->
-            Ok (), ctx //Ok because the generic is in a function passed as argument
+        | Native _, Generic _ -> Ok (), ctx //Ok because the generic is in a function passed as argument
         | Generic iGT, Generic pGT ->
-            Ok (), ctx
+            Ok (), addGeneric iGT paramT ctx
         | Generic iGT, Native pNT ->
-            Ok (),  addGeneric iGT paramT ctx
+            match resolveGeneric iGT ctx with
+                | None -> Ok (),  addGeneric iGT paramT ctx
+                | Some rIGT ->
+                    match rIGT with
+                        | Generic r -> Ok (), addGeneric r paramT ctx
+                        | _ -> genericEqFun rIGT paramT ctx
         | _ -> Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx            
 
 let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
