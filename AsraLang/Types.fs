@@ -84,7 +84,13 @@ let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
 
 let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list): Result<AType, string> * Context =
     match List.tryHead paramTs with
-        | None -> Ok funcT, ctx
+        | None -> 
+            match funcT with
+                | Generic gt -> 
+                    match resolveGeneric gt ctx with
+                        | None -> Ok funcT, ctx
+                        | Some genT -> Ok genT, ctx
+                | _ -> Ok funcT, ctx
         | Some nextParam ->
             match funcT with
                 | Native _ -> Error (sprintf "To many arguments: %A" paramTs), ctx
