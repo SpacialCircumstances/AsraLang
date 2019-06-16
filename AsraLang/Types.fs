@@ -61,7 +61,7 @@ let private simpleTypeEq (inT: AType) (paramT: AType) (ctx: Context) =
     if inT = paramT then
         Ok (), ctx
     else
-        Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx
+        Error (sprintf "Expected argument of type: %O, but got: %O" inT paramT), ctx
 
 let rec private genericEqFun (inT: AType) (paramT: AType) (ctx: Context) =
     match inT, paramT with
@@ -82,7 +82,7 @@ let rec private genericEqFun (inT: AType) (paramT: AType) (ctx: Context) =
                     match rIGT with 
                         | Generic _ -> Ok (), addGeneric iGT paramT ctx
                         | _ -> genericEqFun rIGT paramT ctx
-        | _ -> Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx            
+        | _ -> Error (sprintf "Expected argument of type: %O, but got: %O" inT paramT), ctx            
 
 let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
     match inT, paramT with
@@ -95,10 +95,10 @@ let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
                 | Some rIT ->
                     genericEqFirst rIT paramT ctx
         | Native iNT, Generic pGT ->
-            Error (sprintf "Expected argument of type: %A, but got: %A. %A would be restricted." inT paramT paramT), ctx
+            Error (sprintf "Expected argument of type: %O, but got: %O. %O would be restricted." inT paramT paramT), ctx
         | FunctionType fIT, FunctionType pIT ->
             genericEqFun inT paramT ctx
-        | _ -> Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx
+        | _ -> Error (sprintf "Expected argument of type: %O, but got: %O" inT paramT), ctx
 
 let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list): Result<AType, string> * Context =
     match List.tryHead paramTs with
@@ -111,8 +111,8 @@ let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list):
                 | _ -> Ok funcT, ctx
         | Some nextParam ->
             match funcT with
-                | Native _ -> Error (sprintf "To many arguments: %A" paramTs), ctx
-                | Generic _ -> Error (sprintf "To many arguments: %A" paramTs), ctx
+                | Native _ -> Error (sprintf "To many arguments: %O" paramTs), ctx
+                | Generic _ -> Error (sprintf "To many arguments: %O" paramTs), ctx
                 | FunctionType ft ->
                     let inT = ft.input
                     let outT = ft.output
