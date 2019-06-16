@@ -30,7 +30,7 @@ let abool = Native "Bool"
 
 type Context = {
     resolvedGenerics: Map<string, AType>
-}    
+}
 
 let rec resolveGeneric (t: string) (ctx: Context) = 
     match Map.tryFind t ctx.resolvedGenerics with
@@ -43,6 +43,19 @@ let rec resolveGeneric (t: string) (ctx: Context) =
 
 let private addGeneric (gn: string) (gt: AType) (ctx: Context) = 
     { ctx with resolvedGenerics = Map.add gn gt ctx.resolvedGenerics }
+
+let rec curryGeneric (f: AType) (ctx: Context) =
+    match f with
+        | Native _ -> f
+        | Generic gt ->
+            match resolveGeneric gt ctx with
+                | None -> f
+                | Some rt -> rt
+        | FunctionType ft ->
+            FunctionType {
+                input = curryGeneric ft.input ctx
+                output = curryGeneric ft.output ctx
+            }
 
 let private simpleTypeEq (inT: AType) (paramT: AType) (ctx: Context) =
     if inT = paramT then
@@ -107,7 +120,11 @@ let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list):
                         | Ok _, newCtx -> pReturnType newCtx outT (List.tail paramTs)
                         | Error e, newCtx -> Error e, newCtx
 
-let returnType = pReturnType { resolvedGenerics = Map.empty }
+let returnType (funcT: AType) (paramTs: AType list) = 
+    let (rt, ctx) = pReturnType { resolvedGenerics = Map.empty } funcT paramTs
+    match rt with
+        | Ok rt -> curryGeneric rt ctx |> Ok, ctx
+        | Error e -> Error e, ctx
 
 let rec appliedType (funcT: AType) (paramsCount: int) =
     if paramsCount = 0 then
