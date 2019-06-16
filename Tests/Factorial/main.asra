@@ -5,4 +5,4 @@ factorial: Int => Int = [ n: Int ->
 a = factorial 1
 println a
 b = factorial 5
-println a
+println b
