@@ -69,11 +69,11 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                                                                     | true ->
                                                                         Some (at.varName, te), ctx, errors
                                                                     | false ->
-                                                                        None, ctx, (sprintf "%s: Annotated type: %A, but inferred: %A" (formatPosition def.varData) tp infT |> TypeError) :: errors
+                                                                        None, ctx, (sprintf "%s: Annotated type: %O, but inferred: %O" (formatPosition def.varData) tp infT |> TypeError) :: errors
                                                             | None ->
                                                                 None, ctx, errors
                                                     | None ->
-                                                        None, state.context, [sprintf "%s: Undefined type: %A" (formatPosition def.varData) at.typeName |> TypeError]
+                                                        None, state.context, [sprintf "%s: Undefined type: %O" (formatPosition def.varData) at.typeName |> TypeError]
             match name with
                 | None ->
                     None, state, errors
