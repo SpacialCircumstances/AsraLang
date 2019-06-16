@@ -43,23 +43,38 @@ let rec resolveGeneric (t: string) (ctx: Context) =
 
 let private addGeneric (gn: string) (gt: AType) (ctx: Context) = { ctx with resolvedGenerics = Map.add gn gt ctx.resolvedGenerics }
 
-let rec private genericEqFun (inT: FunType) (paramT: FunType) (ctx: Context) (genEq: AType -> AType -> Context -> Result<unit, string> * Context) = 
-    if inT = paramT then
-        Ok (), ctx
-    else
-        let inputT = match inT.input with
-                        | FunctionType iipT -> 
-                            match paramT.input with
-                                | FunctionType piT ->
-                                    genericEqFun iipT piT ctx genEq
-                                | _ ->
-                                    Error "", ctx
-                        | _ -> genEq inT.input paramT.input ctx
-
-        match inputT with
-            | Ok _, ctx -> 
-                genEq inT.output paramT.output ctx
-            | Error e, ctx -> Error e, ctx
+let rec private genericEqFun (inT: AType) (paramT: AType) (ctx: Context) = 
+    match inT with
+        | Native _ ->
+            match paramT with
+                | Native _ ->
+                    if inT = paramT then
+                        Ok (), ctx
+                    else
+                        Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx
+                | FunctionType _ ->
+                    Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx
+                | Generic _ ->
+                    Error (sprintf "Due to expected type of %A, the argument of %A would be restricted" inT paramT), ctx
+        | Generic g ->
+            match resolveGeneric g ctx with
+                | Some resolvedT -> 
+                    match resolvedT with
+                        | Generic gn ->
+                            Ok (), addGeneric gn paramT ctx
+                        | _ -> genericEqFun resolvedT paramT ctx
+                | None ->
+                    Ok (), addGeneric g paramT ctx
+        | FunctionType ft ->
+            match paramT with
+                | FunctionType pft ->
+                    let ir = genericEqFun ft.input pft.input ctx
+                    match ir with
+                        | Ok _, newCtx ->
+                            genericEqFun ft.output pft.output newCtx
+                        | Error e, newCtx -> Error e, newCtx
+                | _ -> 
+                    Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx
 
 let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
     match inT with
@@ -76,13 +91,25 @@ let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
                     Error (sprintf "Due to expected type of %A, the argument of %A would be restricted" inT paramT), ctx
         | Generic g ->
             match resolveGeneric g ctx with
-                | Some resolvedT -> genericEqFirst resolvedT paramT ctx
+                | Some resolvedT -> 
+                    match resolvedT with
+                        | Generic gn ->
+                            Ok (), addGeneric gn paramT ctx
+                        | _ -> genericEqFirst resolvedT paramT ctx
                 | None ->
                     Ok (), addGeneric g paramT ctx
         | FunctionType ft ->
             match paramT with
                 | FunctionType pft ->
-                    genericEqFun ft pft ctx genericEqFirst
+                    let ir = match ft.input with
+                                | FunctionType _ ->
+                                    genericEqFun ft.input pft.input ctx
+                                | _ ->
+                                    genericEqFirst ft.input pft.input ctx
+                    match ir with
+                        | Ok _, newCtx ->
+                            genericEqFirst ft.output pft.output newCtx
+                        | Error e, newCtx -> Error e, newCtx
                 | _ -> 
                     Error (sprintf "Expected argument of type: %A, but got: %A" inT paramT), ctx
 
