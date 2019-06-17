@@ -7,6 +7,7 @@ let externs =
     [
         { asraName = "println"; asraType = genFunType [ Generic "a" ] (aunit); externName = "println" }
         { asraName = "+"; asraType = genFunType [ anumber; anumber ] (anumber); externName = "add" }
+        { asraName = ".."; asraType = genFunType [ astring; astring ] (astring); externName = "add" }
         { asraName = "-"; asraType = genFunType [ anumber; anumber ] (anumber); externName = "subtract" }
         { asraName = "*"; asraType = genFunType [ anumber; anumber ] (anumber); externName = "multiply" }
         { asraName = "/"; asraType = genFunType [ anumber; anumber ] (anumber); externName = "divide" }

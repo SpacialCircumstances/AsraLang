@@ -1,8 +1,8 @@
-curryAdd = [ a: Number, b: Number -> 
-    + a b
+curryAdd = [ a: String, b: String -> 
+    .. a b
 ]
-x = curryAdd 2
-y = x 4
-z = x 6
+x = curryAdd "a"
+y = x "b"
+z = x "sdf"
 println y
 println z
