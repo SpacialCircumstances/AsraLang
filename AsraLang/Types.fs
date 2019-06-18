@@ -1,31 +1,37 @@
 ﻿module Types
 
+type Primitive =
+    | Native of string
+with
+    override x.ToString() = match x with
+                                | Native s -> s
+
 type FunType = {
     input: AType
     output: AType
 }
 
 and AType = 
-    | Primitive of string
+    | Primitive of Primitive
     | Generic of string
     | FunctionType of FunType
 with
     override x.ToString() = match x with
-                                | Primitive str -> str
+                                | Primitive str -> str.ToString ()
                                 | Generic tp -> "'" + tp
                                 | FunctionType funt -> 
                                     match funt.input with
                                         | Generic tp ->
-                                            sprintf "'%s -> %O" tp funt.output
+                                            sprintf "'%O -> %O" tp funt.output
                                         | Primitive tp ->
-                                            sprintf "%s -> %O" tp funt.output
+                                            sprintf "%O -> %O" tp funt.output
                                         | FunctionType ft ->
                                             sprintf "(%O -> %O) -> %O" ft.input ft.output funt.output
 
-let anumber = Primitive "Number"
-let astring = Primitive "String"
-let aunit = Primitive "Unit"
-let abool = Primitive "Bool"
+let anumber = Primitive (Native "Number")
+let astring = Primitive (Native "String")
+let aunit = Primitive (Native "Unit")
+let abool = Primitive (Native "Bool")
 
 type Context = {
     resolvedGenerics: Map<string, AType>
@@ -136,6 +142,6 @@ let rec appliedType (funcT: AType) (paramsCount: int) =
 
 let rec genFunType (paramTypes: AType list) (retType: AType) = 
     match paramTypes with
-        | [] -> FunctionType { input = Primitive "Unit"; output = retType }
+        | [] -> FunctionType { input = aunit; output = retType }
         | [tp] -> FunctionType { input = tp; output = retType }
         | tp :: x -> FunctionType { input = tp; output = genFunType x retType }
