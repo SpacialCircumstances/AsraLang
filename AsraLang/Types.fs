@@ -6,26 +6,26 @@ type FunType = {
 }
 
 and AType = 
-    | Native of string
+    | Primitive of string
     | Generic of string
     | FunctionType of FunType
 with
     override x.ToString() = match x with
-                                | Native str -> str
+                                | Primitive str -> str
                                 | Generic tp -> "'" + tp
                                 | FunctionType funt -> 
                                     match funt.input with
                                         | Generic tp ->
                                             sprintf "'%s -> %O" tp funt.output
-                                        | Native tp ->
+                                        | Primitive tp ->
                                             sprintf "%s -> %O" tp funt.output
                                         | FunctionType ft ->
                                             sprintf "(%O -> %O) -> %O" ft.input ft.output funt.output
 
-let anumber = Native "Number"
-let astring = Native "String"
-let aunit = Native "Unit"
-let abool = Native "Bool"
+let anumber = Primitive "Number"
+let astring = Primitive "String"
+let aunit = Primitive "Unit"
+let abool = Primitive "Bool"
 
 type Context = {
     resolvedGenerics: Map<string, AType>
@@ -45,7 +45,7 @@ let private addGeneric (gn: string) (gt: AType) (ctx: Context) =
 
 let rec curryGeneric (f: AType) (ctx: Context) =
     match f with
-        | Native _ -> f
+        | Primitive _ -> f
         | Generic gt ->
             match resolveGeneric gt ctx with
                 | None -> f
@@ -64,17 +64,17 @@ let private simpleTypeEq (inT: AType) (paramT: AType) (ctx: Context) =
 
 let rec private genericEqFun (inT: AType) (paramT: AType) (ctx: Context) =
     match inT, paramT with
-        | Native _, Native _ ->
+        | Primitive _, Primitive _ ->
             simpleTypeEq inT paramT ctx
         | FunctionType fIT, FunctionType pIT ->
             match genericEqFun fIT.input pIT.input ctx with
                 | Ok _, newCtx ->
                     genericEqFun fIT.output pIT.output newCtx
                 | Error e, newCtx -> Error e, newCtx
-        | Native _, Generic _ -> Ok (), ctx //Ok because the generic is in a function passed as argument
+        | Primitive _, Generic _ -> Ok (), ctx //Ok because the generic is in a function passed as argument
         | Generic iGT, Generic pGT ->
             Ok (), ctx
-        | Generic iGT, Native pNT ->
+        | Generic iGT, Primitive pNT ->
             match resolveGeneric iGT ctx with
                 | None -> Ok (),  addGeneric iGT paramT ctx
                 | Some rIGT ->
@@ -85,7 +85,7 @@ let rec private genericEqFun (inT: AType) (paramT: AType) (ctx: Context) =
 
 let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
     match inT, paramT with
-        | Native iNT, Native pNT ->
+        | Primitive iNT, Primitive pNT ->
             simpleTypeEq inT paramT ctx
         | Generic iGT, _ ->
             match resolveGeneric iGT ctx with
@@ -93,7 +93,7 @@ let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
                     Ok (), addGeneric iGT paramT ctx
                 | Some rIT ->
                     genericEqFirst rIT paramT ctx
-        | Native iNT, Generic pGT ->
+        | Primitive iNT, Generic pGT ->
             Error (sprintf "Expected argument of type: %O, but got: %O. %O would be restricted." inT paramT paramT), ctx
         | FunctionType fIT, FunctionType pIT ->
             genericEqFun inT paramT ctx
@@ -110,7 +110,7 @@ let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list):
                 | _ -> Ok funcT, ctx
         | Some nextParam ->
             match funcT with
-                | Native _ -> Error (sprintf "To many arguments: %O" paramTs), ctx
+                | Primitive _ -> Error (sprintf "To many arguments: %O" paramTs), ctx
                 | Generic _ -> Error (sprintf "To many arguments: %O" paramTs), ctx
                 | FunctionType ft ->
                     let inT = ft.input
@@ -130,12 +130,12 @@ let rec appliedType (funcT: AType) (paramsCount: int) =
         Some funcT
     else
         match funcT with
-            | Native _ -> None
+            | Primitive _ -> None
             | Generic _ -> None
             | FunctionType ft -> appliedType ft.output (paramsCount - 1)
 
 let rec genFunType (paramTypes: AType list) (retType: AType) = 
     match paramTypes with
-        | [] -> FunctionType { input = Native "Unit"; output = retType }
+        | [] -> FunctionType { input = Primitive "Unit"; output = retType }
         | [tp] -> FunctionType { input = tp; output = retType }
         | tp :: x -> FunctionType { input = tp; output = genFunType x retType }
