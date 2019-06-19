@@ -1,4 +1,5 @@
 ﻿module Types
+open System
 
 type Primitive =
     | Native of string
@@ -11,19 +12,34 @@ type FunType = {
     output: AType
 }
 
+and TypeParameterized = {
+    typeParameters: Map<string, AType option>
+    baseType: Primitive
+}
+with
+    override x.ToString() = 
+        let parameters = String.Join (",", Map.map (fun k tp -> match tp with
+                                                                    | None -> sprintf "'%s" k
+                                                                    | Some rt -> rt.ToString()) x.typeParameters)
+        sprintf "%O<%s>" x.baseType parameters
+
 and AType = 
     | Primitive of Primitive
     | Generic of string
     | FunctionType of FunType
+    | TypeParameterized of TypeParameterized
 with
     override x.ToString() = match x with
+                                | TypeParameterized tp -> tp.ToString()
                                 | Primitive str -> str.ToString ()
                                 | Generic tp -> "'" + tp
                                 | FunctionType funt -> 
                                     match funt.input with
                                         | Generic tp ->
-                                            sprintf "'%O -> %O" tp funt.output
+                                            sprintf "'%s -> %O" tp funt.output
                                         | Primitive tp ->
+                                            sprintf "%O -> %O" tp funt.output
+                                        | TypeParameterized tp ->
                                             sprintf "%O -> %O" tp funt.output
                                         | FunctionType ft ->
                                             sprintf "(%O -> %O) -> %O" ft.input ft.output funt.output
