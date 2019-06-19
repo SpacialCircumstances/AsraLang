@@ -132,14 +132,13 @@ let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list):
                 | _ -> Ok funcT, ctx
         | Some nextParam ->
             match funcT with
-                | Primitive _ -> Error (sprintf "To many arguments: %O" paramTs), ctx
-                | Generic _ -> Error (sprintf "To many arguments: %O" paramTs), ctx
                 | FunctionType ft ->
                     let inT = ft.input
                     let outT = ft.output
                     match genericEqFirst inT nextParam ctx with
                         | Ok _, newCtx -> pReturnType newCtx outT (List.tail paramTs)
                         | Error e, newCtx -> Error e, newCtx
+                | _ -> Error (sprintf "To many arguments: %O" paramTs), ctx
 
 let returnType (funcT: AType) (paramTs: AType list) = 
     let (rt, ctx) = pReturnType { resolvedGenerics = Map.empty } funcT paramTs
@@ -154,6 +153,7 @@ let rec appliedType (funcT: AType) (paramsCount: int) =
         match funcT with
             | Primitive _ -> None
             | Generic _ -> None
+            | TypeParameterized _ -> None
             | FunctionType ft -> appliedType ft.output (paramsCount - 1)
 
 let rec genFunType (paramTypes: AType list) (retType: AType) = 
