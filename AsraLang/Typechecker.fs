@@ -24,6 +24,14 @@ let formatPosition (pos: FParsec.Position) =
 let rec resolveType (state: State) (typeName: TypeDeclaration) = 
     match typeName with
         | Name typeName -> Map.tryFind typeName state.types
+        | Parameterized pt ->
+            match Map.tryFind pt.name state.types with
+                | Some (Primitive rbt) ->
+                    TypeParameterized {
+                        typeParameters = Map.ofSeq (Seq.map (fun k -> k, None) pt.genericParameters)
+                        baseType = rbt
+                    } |> Some
+                | _ -> None
         | Generic typeName -> Some (AType.Generic typeName)
         | Function (inp, out) -> 
             match (resolveType state inp, resolveType state out) with

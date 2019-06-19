@@ -12,7 +12,13 @@ type Literal<'data> = {
     literalValue: LiteralValue
 }
 
+type ParameterizedTypeDeclaration = {
+    name: string
+    genericParameters: string list
+}
+
 type TypeDeclaration =
+    | Parameterized of ParameterizedTypeDeclaration
     | Name of string
     | Generic of string
     | Function of TypeDeclaration * TypeDeclaration
