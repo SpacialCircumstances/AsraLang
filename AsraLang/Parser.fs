@@ -51,10 +51,12 @@ let createParser (data: Parser<'data, unit>) =
     let separatorParser = skipMany1 (skipChar '\n' <|> skipChar ';' <|> commentParser) <!> "Separator parser" <?> "Separator"
     
     let ws = skipMany (pchar ' ' <|> pchar '\t')
+
+    let ws1 = skipMany1 (pchar ' ' <|> pchar '\t')
     
-    let openParensParser: Parser<char, unit> = pchar '('
+    let openParensParser: Parser<unit, unit> = skipChar '('
     
-    let closeParensParser: Parser<char, unit> = pchar ')'
+    let closeParensParser: Parser<unit, unit> = skipChar ')'
     
     let groupExpressionParser = between openParensParser closeParensParser expressionParser |>> GroupExpression <?> "Group expression" <!> "Group expression parser"
     
@@ -62,11 +64,7 @@ let createParser (data: Parser<'data, unit>) =
 
     let commaParser = skipChar ','
 
-    let angleBracketOpenParser = skipChar '<'
-
-    let angleBracketCloseParser = skipChar '>'
-
-    let parameterizedTypeParser = identifierParser .>>? angleBracketOpenParser .>>.? (sepBy1 typeParser commaParser) .>> angleBracketCloseParser |>> (fun (bt, parameters) -> Parameterized { name = bt; genericParameters = parameters }) <!> "Parameterized type parser"
+    let parameterizedTypeParser = openParensParser >>? identifierParser .>> ws1 .>>.? (sepBy1 typeParser ws1) .>> closeParensParser |>> (fun (bt, parameters) -> Parameterized { name = bt; genericParameters = parameters }) <!> "Parameterized type parser"
 
     let namedTypeParser = identifierParser |>> Name <!> "Named type parser"
 
