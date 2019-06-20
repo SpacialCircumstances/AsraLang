@@ -258,3 +258,61 @@ let ``Block binding with type annotation`` () =
         }
     ]
     isOk parsed (fun result -> astMatch expected result)
+
+[<Fact>]
+let ``Parse parameterized types`` () =
+    let input = """
+    x: (Array String) = test1
+    y: (Map String 'c) = test2
+    z: (Map String (Array String => Number => Unit)) = test3
+    """
+    let parsed = Parser.testParser input
+    let expected = [
+        VariableBindingExpression {
+            varData = ()
+            varName = Annotated {
+                varName = "x"
+                typeName = Parameterized {
+                    name = "Array"
+                    genericParameters = [
+                        Name "String"
+                    ]
+                }
+            }
+            value = VariableExpression ("test1", ())
+        }
+        VariableBindingExpression {
+            varData = ()
+            varName = Annotated {
+                varName = "y"
+                typeName = Parameterized {
+                    name = "Map"
+                    genericParameters = [
+                        Name "String"
+                        Generic "c"
+                    ]
+                }
+            }
+            value = VariableExpression ("test2", ())
+        }
+        VariableBindingExpression {
+            varData = ()
+            varName = Annotated {
+                varName = "z"
+                typeName = Parameterized {
+                    name = "Map"
+                    genericParameters = [
+                        Name "String"
+                        Parameterized {
+                            name = "Array"
+                            genericParameters = [
+                                Function (Name "String", Function (Name "Number", Name "Unit"))
+                            ]
+                        }
+                    ]
+                }
+            }
+            value = VariableExpression ("test3", ())
+        }
+    ]
+    isOk parsed (fun result -> astMatch expected result)
