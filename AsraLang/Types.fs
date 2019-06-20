@@ -119,6 +119,19 @@ let rec private genericEqFirst (inT: AType) (paramT: AType) (ctx: Context) =
             Error (sprintf "Expected argument of type: %O, but got: %O. %O would be restricted." inT paramT paramT), ctx
         | FunctionType fIT, FunctionType pIT ->
             genericEqFun inT paramT ctx
+        | TypeParameterized iTP, TypeParameterized pTP ->
+            match genericEqFirst (Primitive iTP.baseType) (Primitive pTP.baseType) ctx, List.length iTP.typeParameters = List.length pTP.typeParameters with
+                | (Ok _, context), true -> 
+                    let tpPairs = List.zip iTP.typeParameters pTP.typeParameters
+                    let errors, newCtx = List.fold (fun (err, ctx) (itp, ptp) -> 
+                        match genericEqFirst itp ptp ctx with
+                            | Ok _, newCtx -> err, newCtx
+                            | Error e, newCtx -> e :: err, newCtx) ([], context) tpPairs
+                    match errors with
+                        | [] -> Ok (), newCtx
+                        | _ -> Error (List.head errors), newCtx //TODO: Report more than the first error?
+                | (Error e, ctx), _ -> Error e, ctx
+                | _ -> Error (sprintf "Expected argument of type: %O, but got: %O" inT paramT), ctx
         | _ -> Error (sprintf "Expected argument of type: %O, but got: %O" inT paramT), ctx
 
 let rec private pReturnType (ctx: Context) (funcT: AType) (paramTs: AType list): Result<AType, string> * Context =
