@@ -14,10 +14,10 @@ type Literal<'data> = {
 
 type ParameterizedTypeDeclaration = {
     name: string
-    genericParameters: string list
+    genericParameters: TypeDeclaration list
 }
 
-type TypeDeclaration =
+and TypeDeclaration =
     | Parameterized of ParameterizedTypeDeclaration
     | Name of string
     | Generic of string

@@ -13,14 +13,12 @@ type FunType = {
 }
 
 and TypeParameterized = {
-    typeParameters: Map<string, AType option>
+    typeParameters: AType list
     baseType: Primitive
 }
 with
     override x.ToString() = 
-        let parameters = String.Join (",", Map.map (fun k tp -> match tp with
-                                                                    | None -> sprintf "'%s" k
-                                                                    | Some rt -> rt.ToString()) x.typeParameters)
+        let parameters = String.Join (",", List.map string x.typeParameters)
         sprintf "%O<%s>" x.baseType parameters
 
 and AType = 

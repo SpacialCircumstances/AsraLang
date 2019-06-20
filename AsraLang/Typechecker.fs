@@ -27,10 +27,13 @@ let rec resolveType (state: State) (typeName: TypeDeclaration) =
         | Parameterized pt ->
             match Map.tryFind pt.name state.types with
                 | Some (Primitive rbt) ->
-                    TypeParameterized {
-                        typeParameters = Map.ofSeq (Seq.map (fun k -> k, None) pt.genericParameters)
-                        baseType = rbt
-                    } |> Some
+                    let resolveTried = List.map (fun tp -> resolveType state tp) pt.genericParameters
+                    let resolved = List.choose id resolveTried
+                    match List.length resolved = List.length resolveTried with
+                        | true -> TypeParameterized {
+                                typeParameters = resolved
+                                baseType = rbt } |> Some
+                        | false -> None
                 | _ -> None
         | Generic typeName -> Some (AType.Generic typeName)
         | Function (inp, out) -> 
