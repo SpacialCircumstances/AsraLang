@@ -60,13 +60,21 @@ let createParser (data: Parser<'data, unit>) =
     
     let typeArrowParser = skipString "=>"
 
+    let commaParser = skipChar ','
+
+    let angleBracketOpenParser = skipChar '<'
+
+    let angleBracketCloseParser = skipChar '>'
+
+    let parameterizedTypeParser = identifierParser .>>? angleBracketOpenParser .>>.? (sepBy1 typeParser commaParser) .>> angleBracketCloseParser |>> (fun (bt, parameters) -> Parameterized { name = bt; genericParameters = parameters })
+
     let namedTypeParser = identifierParser |>> Name
 
     let genericTypeParser = skipChar '\'' >>. identifierParser |>> Generic
 
     let functionTypeParser = namedTypeParser .>>? ws .>>? typeArrowParser .>> ws .>>. typeParser |>> Function
 
-    typeParserRef := functionTypeParser <|> genericTypeParser <|> namedTypeParser <!> "Type parser" <?> "Type"
+    typeParserRef := parameterizedTypeParser <|> functionTypeParser <|> genericTypeParser <|> namedTypeParser <!> "Type parser" <?> "Type"
     
     let equalsParser = pchar '='
     
@@ -77,9 +85,7 @@ let createParser (data: Parser<'data, unit>) =
     let declarationParser = annotatedDeclarationParser <|> simpleDeclarationParser <!> "Declaration parser" <?> "Declaration"
     
     let variableDefinitionParser = data .>>. declarationParser .>> equalsParser .>> ws .>>. valueExpressionParser .>> ws |>> (fun ((data, decl), expr) -> VariableBindingExpression { varName = decl; value = expr; varData = data }) <!> "Variable definition parser"
-    
-    let commaParser = skipChar ','
-    
+        
     let arrowParser = skipString "->"
     
     let blockParameterParser = ((sepBy (ws >>. declarationParser .>> ws) commaParser) .>> ws .>> arrowParser) |> attempt |> opt <?> "Block parameters" <!> "Block parameter parser"
