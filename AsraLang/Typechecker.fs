@@ -170,6 +170,7 @@ let typecheck (program: UntypedExpression) (externs: Extern list) =
             "Bool", abool
             "Unit", aunit
             "String", astring
+            "Array", aarray
         ]
     }
     typeExpr init program

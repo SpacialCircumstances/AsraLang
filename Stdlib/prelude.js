@@ -18,3 +18,10 @@ const or = (a) => (b) => a || b;
 const toStr = (a) => a.toString();
 const trueVal = true;
 const falseVal = false;
+const newArray = (n) => (creator) => {
+    const newarr = [];
+    for (let i = 0; i < n; i++) {
+        newarr.push(creator(i));
+    }
+    return newarr;
+}

@@ -24,4 +24,5 @@ let externs =
         { asraName = "true"; asraType = abool; externName = "trueVal" }
         { asraName = "false"; asraType = abool; externName = "falseVal" }
         { asraName = "toString"; asraType = genFunType [ Generic "a" ] astring; externName = "toStr" }
+        { asraName = "newArray"; asraType = genFunType [ anumber; (genFunType [ anumber ] (Generic "a")) ] aarray; externName = "newArray" }
     ]

@@ -1,0 +1,2 @@
+testArray = newArray 5 [ i: Number -> i ]
+println testArray
