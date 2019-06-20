@@ -25,4 +25,5 @@ let externs =
         { asraName = "false"; asraType = abool; externName = "falseVal" }
         { asraName = "toString"; asraType = genFunType [ Generic "a" ] astring; externName = "toStr" }
         { asraName = "newArray"; asraType = genFunType [ anumber; (genFunType [ anumber ] (Generic "a")) ] aarray; externName = "newArray" }
+        { asraName = "foreach"; asraType = genFunType [ aarray; (genFunType [ Generic "a" ] aunit) ] aunit; externName = "forEach" }
     ]

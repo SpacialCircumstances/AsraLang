@@ -25,3 +25,4 @@ const newArray = (n) => (creator) => {
     }
     return newarr;
 }
+const forEach = (arr) => (fun) => arr.forEach(fun);
