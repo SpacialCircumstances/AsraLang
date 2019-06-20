@@ -75,6 +75,8 @@ let rec curryGeneric (f: AType) (ctx: Context) =
                 input = curryGeneric ft.input ctx
                 output = curryGeneric ft.output ctx
             }
+        | TypeParameterized tp ->
+            { tp with typeParameters = List.map (fun t -> curryGeneric t ctx) tp.typeParameters } |> TypeParameterized
 
 let private simpleTypeEq (inT: AType) (paramT: AType) (ctx: Context) =
     if inT = paramT then
