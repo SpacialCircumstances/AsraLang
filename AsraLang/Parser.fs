@@ -66,13 +66,13 @@ let createParser (data: Parser<'data, unit>) =
 
     let angleBracketCloseParser = skipChar '>'
 
-    let parameterizedTypeParser = identifierParser .>>? angleBracketOpenParser .>>.? (sepBy1 typeParser commaParser) .>> angleBracketCloseParser |>> (fun (bt, parameters) -> Parameterized { name = bt; genericParameters = parameters })
+    let parameterizedTypeParser = identifierParser .>>? angleBracketOpenParser .>>.? (sepBy1 typeParser commaParser) .>> angleBracketCloseParser |>> (fun (bt, parameters) -> Parameterized { name = bt; genericParameters = parameters }) <!> "Parameterized type parser"
 
-    let namedTypeParser = identifierParser |>> Name
+    let namedTypeParser = identifierParser |>> Name <!> "Named type parser"
 
-    let genericTypeParser = skipChar '\'' >>. identifierParser |>> Generic
+    let genericTypeParser = skipChar '\'' >>. identifierParser |>> Generic <!> "Generic type parser"
 
-    let functionTypeParser = namedTypeParser .>>? ws .>>? typeArrowParser .>> ws .>>. typeParser |>> Function
+    let functionTypeParser = namedTypeParser .>>? ws .>>? typeArrowParser .>> ws .>>. typeParser |>> Function <!> "Function type parser"
 
     typeParserRef := parameterizedTypeParser <|> functionTypeParser <|> genericTypeParser <|> namedTypeParser <!> "Type parser" <?> "Type"
     
