@@ -13,8 +13,14 @@ type Message =
     | TypeError of string
     | Warning of string
 
-type State = {
+//TODO: Use nested context for different scopes
+type Context = {
+    parent: Context option
     context: Map<string, AType>
+}
+
+type State = {
+    context: Context
     types: Map<string, AType>
 }
 
@@ -65,13 +71,13 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                                                 let typed, _, errors = typeExpr state def.value
                                                 match typed with
                                                     | Some te ->
-                                                        Some (s, te), Map.add s (getType te) state.context, errors
+                                                        Some (s, te), { state.context with context = Map.add s (getType te) state.context.context }, errors
                                                     | None ->
                                                         None, state.context, errors
                                             | Annotated at ->
                                                 match resolveType state at.typeName with
                                                     | Some tp ->
-                                                        let ctx = Map.add at.varName tp state.context
+                                                        let ctx = { state.context with context = Map.add at.varName tp state.context.context }
                                                         let typed, _, errors = typeExpr { state with context = ctx } def.value
                                                         match typed with
                                                             | Some te ->
@@ -93,7 +99,7 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                     let newState = { state with context = newContext }
                     Some (VariableBindingExpression binding), newState, errors
         | VariableExpression (var, pos) ->
-            let varType = Map.tryFind var state.context
+            let varType = Map.tryFind var state.context.context
             match varType with
                 | Some varType ->
                     Some (VariableExpression (var, varType)), state, []
@@ -146,7 +152,7 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                                                                         | None -> None) parameters
 
                     if (List.length typedParams) = (List.length parameters) then
-                        let blockContext = List.fold (fun ctx (p, pt) -> Map.add p pt ctx) state.context typedParams
+                        let blockContext = { state.context with context = List.fold (fun ctx (p, pt) -> Map.add p pt ctx) state.context.context typedParams }
                         let blockState = { state with context = blockContext }
                         let body, (_, errors) = List.mapFold foldSubExprs (blockState, []) block.body
                         match errors with
@@ -164,7 +170,10 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
 
 let typecheck (program: UntypedExpression) (externs: Extern list) =
     let init = { 
-        context = Map.ofList (List.map (fun ext -> ext.asraName, ext.asraType) externs); 
+        context = {
+            parent = None
+            context = Map.ofList (List.map (fun ext -> ext.asraName, ext.asraType) externs)
+        }
         types = Map.ofList [ 
             "Number", anumber
             "Bool", abool
