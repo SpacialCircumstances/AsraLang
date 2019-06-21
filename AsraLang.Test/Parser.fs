@@ -262,9 +262,9 @@ let ``Block binding with type annotation`` () =
 [<Fact>]
 let ``Parse parameterized types`` () =
     let input = """
-    x: (Array String) = test1
-    y: (Map String 'c) = test2
-    z: (Map String (Array String => Number => Unit)) = test3
+    x: Array String = test1
+    y: Map String 'c = test2
+    z: Map String (Array (String => Number => Unit)) = test3
     """
     let parsed = Parser.testParser input
     let expected = [

@@ -21,6 +21,8 @@ let createParser (data: Parser<'data, unit>) =
     
     let (typeParser: Parser<TypeDeclaration, unit>, typeParserRef) = createParserForwardedToRef ()
 
+    let (simpleTypeParser: Parser<TypeDeclaration, unit>, simpleTypeParserRef) = createParserForwardedToRef ()
+
     let openParensParser: Parser<unit, unit> = skipChar '('
     
     let closeParensParser: Parser<unit, unit> = skipChar ')'
@@ -33,7 +35,13 @@ let createParser (data: Parser<'data, unit>) =
     
     let identifierOptions = IdentifierOptions(isAsciiIdStart = isIdentifierStart, isAsciiIdContinue = isIdentifierContinue)
     
-    let identifierParser: Parser<string, unit> = identifier identifierOptions <?> "Identifier"
+    let identifierParser: Parser<string, unit> = identifier identifierOptions >>= (fun s ->
+        match s with
+            | "=>" -> fail ""
+            | "->" -> fail ""
+            | "=" -> fail ""
+            | _ -> preturn s
+    )
     
     let floatLiteralParser: Parser<LiteralValue, unit> = numberLiteral (NumberLiteralOptions.DefaultFloat) "Float literal" |>> fun f -> 
         match f.IsInteger with
@@ -74,13 +82,23 @@ let createParser (data: Parser<'data, unit>) =
 
     let functionTypeParser = namedTypeParser .>>? ws .>>? typeArrowParser .>> ws .>>. typeParser |>> Function <!> "Function type parser"
 
-    typeParserRef := choiceL [
+    let groupedTypeParser = between openParensParser closeParensParser typeParser
+
+    simpleTypeParserRef := choice [
+        groupedTypeParser
         functionTypeParser
-        between openParensParser closeParensParser parameterizedTypeParser
         genericTypeParser
         namedTypeParser
-    ] "Type"
+    ]
     
+    typeParserRef := choiceL [
+        groupedTypeParser
+        functionTypeParser
+        genericTypeParser
+        parameterizedTypeParser
+        namedTypeParser
+    ] "Type"
+
     let equalsParser = pchar '='
     
     let simpleDeclarationParser = ws >>. identifierParser .>> ws |>> Simple
