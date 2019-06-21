@@ -21,6 +21,10 @@ let createParser (data: Parser<'data, unit>) =
     
     let (typeParser: Parser<TypeDeclaration, unit>, typeParserRef) = createParserForwardedToRef ()
 
+    let openParensParser: Parser<unit, unit> = skipChar '('
+    
+    let closeParensParser: Parser<unit, unit> = skipChar ')'
+
     let isSeparator (c: char) = Char.IsWhiteSpace c || c = ';' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':' || c = '#'
     
     let isIdentifierStart (c: char) = (not (isDigit c)) && not (isSeparator c)
@@ -42,7 +46,9 @@ let createParser (data: Parser<'data, unit>) =
     
     let stringLiteralParser = quoteParser >>. (manyCharsTill anyChar quoteParser) |>> (fun s -> LiteralValue.String s) <?> "String literal"
     
-    let literalExpressionParser = data .>>. choiceL [ stringLiteralParser; floatLiteralParser; intLiteralParser ] "Literal" |>> (fun (data, lit) -> LiteralExpression { literalValue = lit; data = data }) <!> "Literal expression parser"
+    let unitLiteralParser = openParensParser >>. closeParensParser |> attempt |>> fun _ -> LiteralValue.Unit
+
+    let literalExpressionParser = data .>>. choiceL [ stringLiteralParser; floatLiteralParser; intLiteralParser; unitLiteralParser ] "Literal" |>> (fun (data, lit) -> LiteralExpression { literalValue = lit; data = data }) <!> "Literal expression parser"
     
     let variableExpressionParser = data .>>. identifierParser |>> (fun (data, s) -> VariableExpression (s, data)) <?> "Variable expression" <!> "Variable expression parser"
     
@@ -53,10 +59,6 @@ let createParser (data: Parser<'data, unit>) =
     let ws = skipMany (pchar ' ' <|> pchar '\t')
 
     let ws1 = skipMany1 (pchar ' ' <|> pchar '\t')
-    
-    let openParensParser: Parser<unit, unit> = skipChar '('
-    
-    let closeParensParser: Parser<unit, unit> = skipChar ')'
     
     let groupExpressionParser = between openParensParser closeParensParser expressionParser |>> GroupExpression <?> "Group expression" <!> "Group expression parser"
     

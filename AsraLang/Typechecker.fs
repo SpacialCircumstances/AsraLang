@@ -59,6 +59,8 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                                         Int i, anumber 
                                     | LiteralValue.Float f ->
                                         Float f, anumber
+                                    | LiteralValue.Unit ->
+                                        Unit, aunit
             Some (LiteralExpression { data = litType; literalValue = literal }), state, []
         | GroupExpression e ->
             let subExpr, newState, errors = typeExpr state e

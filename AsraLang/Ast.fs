@@ -6,6 +6,7 @@ type LiteralValue =
     | Int of int64
     | String of string
     | Float of float
+    | Unit
 
 type Literal<'data> = {
     data: 'data
