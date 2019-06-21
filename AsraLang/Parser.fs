@@ -64,7 +64,7 @@ let createParser (data: Parser<'data, unit>) =
 
     let commaParser = skipChar ','
 
-    let parameterizedTypeParser = openParensParser >>? identifierParser .>> ws1 .>>.? (sepBy1 typeParser ws1) .>> closeParensParser |>> (fun (bt, parameters) -> Parameterized { name = bt; genericParameters = parameters }) <!> "Parameterized type parser"
+    let parameterizedTypeParser = identifierParser .>>? ws1 .>>.? (sepBy1 typeParser ws1) |> attempt |>> (fun (bt, parameters) -> Parameterized { name = bt; genericParameters = parameters }) <!> "Parameterized type parser"
 
     let namedTypeParser = identifierParser |>> Name <!> "Named type parser"
 
@@ -72,7 +72,12 @@ let createParser (data: Parser<'data, unit>) =
 
     let functionTypeParser = namedTypeParser .>>? ws .>>? typeArrowParser .>> ws .>>. typeParser |>> Function <!> "Function type parser"
 
-    typeParserRef := parameterizedTypeParser <|> functionTypeParser <|> genericTypeParser <|> namedTypeParser <!> "Type parser" <?> "Type"
+    typeParserRef := choiceL [
+        functionTypeParser
+        between openParensParser closeParensParser parameterizedTypeParser
+        genericTypeParser
+        namedTypeParser
+    ] "Type"
     
     let equalsParser = pchar '='
     
