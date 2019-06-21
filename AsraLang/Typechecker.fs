@@ -95,9 +95,13 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                 | None ->
                     None, state, errors
                 | Some (name, typedExpr) ->
+                    let errs = match getType typedExpr with
+                                    | Primitive (Native "Unit") ->
+                                        (Warning (sprintf "%s: Attempting to set %s to a unit expresssion, which will result in undefined" (formatPosition def.varData) name)) :: errors
+                                    | _ -> errors
                     let binding: VariableBinding<AType> = { varName = Simple name; varData = getType typedExpr; value = typedExpr }
                     let newState = { state with context = newContext }
-                    Some (VariableBindingExpression binding), newState, errors
+                    Some (VariableBindingExpression binding), newState, errs
         | VariableExpression (var, pos) ->
             let varType = Map.tryFind var state.context.context
             match varType with
