@@ -80,7 +80,7 @@ let createParser (data: Parser<'data, unit>) =
 
     let genericTypeParser = skipChar '\'' >>. identifierParser |>> Generic <!> "Generic type parser"
 
-    let functionTypeParser = sepBy (ws >>. simpleTypeParser .>> ws) typeArrowParser |>> funTypeDecl <!> "Function type parser"
+    let functionTypeParser = sepBy1 (ws >>. simpleTypeParser .>> ws) typeArrowParser |>> funTypeDecl <!> "Function type parser"
 
     let groupedTypeParser = between openParensParser closeParensParser typeParser
 
