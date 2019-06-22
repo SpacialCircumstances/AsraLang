@@ -264,7 +264,7 @@ let ``Parse parameterized types`` () =
     let input = """
     x: Array String = test1
     y: Map String 'c = test2
-    z: Map String (Array (String => Number => Unit)) = test3
+    z: Map String (Array (String => (Array Number) => Unit)) = test3
     """
     let parsed = Parser.testParser input
     let expected = [
@@ -306,7 +306,15 @@ let ``Parse parameterized types`` () =
                         Parameterized {
                             name = "Array"
                             genericParameters = [
-                                Function (Name "String", Function (Name "Number", Name "Unit"))
+                                Function (Name "String", 
+                                    Function (
+                                        Parameterized {
+                                            name = "Array"
+                                            genericParameters = [
+                                                Name "Number"
+                                            ]
+                                        },
+                                        Name "Unit"))
                             ]
                         }
                     ]

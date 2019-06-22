@@ -36,12 +36,11 @@ let createParser (data: Parser<'data, unit>) =
     let identifierOptions = IdentifierOptions(isAsciiIdStart = isIdentifierStart, isAsciiIdContinue = isIdentifierContinue)
     
     let identifierParser: Parser<string, unit> = identifier identifierOptions >>= (fun s ->
-        match s with
-            | "=>" -> fail ""
-            | "->" -> fail ""
-            | "=" -> fail ""
-            | _ -> preturn s
-    )
+                                                                                        match s with
+                                                                                            | "=>" -> fail ""
+                                                                                            | "->" -> fail ""
+                                                                                            | "=" -> fail ""
+                                                                                            | _ -> preturn s) |> attempt
     
     let floatLiteralParser: Parser<LiteralValue, unit> = numberLiteral (NumberLiteralOptions.DefaultFloat) "Float literal" |>> fun f -> 
         match f.IsInteger with
@@ -74,7 +73,7 @@ let createParser (data: Parser<'data, unit>) =
 
     let commaParser = skipChar ','
 
-    let parameterizedTypeParser = identifierParser .>>? ws1 .>>.? (sepBy1 simpleTypeParser ws) |> attempt |>> (fun (bt, parameters) -> Parameterized { name = bt; genericParameters = parameters }) <!> "Parameterized type parser"
+    let parameterizedTypeParser = identifierParser .>>? ws1 .>>.? (sepEndBy1 simpleTypeParser ws1) |>> (fun (bt, parameters) -> Parameterized { name = bt; genericParameters = parameters }) <!> "Parameterized type parser"
 
     let namedTypeParser = identifierParser |>> Name <!> "Named type parser"
 
@@ -82,7 +81,7 @@ let createParser (data: Parser<'data, unit>) =
 
     let functionTypeParser = simpleTypeParser .>>? ws .>>? typeArrowParser .>>.? sepBy1 (ws >>. simpleTypeParser .>> ws) typeArrowParser |>> (fun (s, r) -> funTypeDecl (s :: r)) <!> "Function type parser"
 
-    let groupedTypeParser = between openParensParser closeParensParser typeParser
+    let groupedTypeParser = between openParensParser closeParensParser typeParser <!> "Grouped type parser"
 
     simpleTypeParserRef := choice [
         groupedTypeParser
