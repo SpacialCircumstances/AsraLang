@@ -24,6 +24,11 @@ and TypeDeclaration =
     | Generic of string
     | Function of TypeDeclaration * TypeDeclaration
 
+let rec funTypeDecl (tds: TypeDeclaration list) =
+    match List.length tds with
+        | 1 -> List.head tds
+        | _ -> Function (List.head tds, funTypeDecl (List.tail tds))
+
 type TypeAnnotated = { //TODO: Support complex types
     typeName: TypeDeclaration
     varName: string
