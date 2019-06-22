@@ -6,13 +6,14 @@ open Asserts
 
 [<Fact>]
 let ``Parse literals`` () =
-    let input = """12; 234.5; "test"; 123.4"""
+    let input = """12; 234.5; "test"; 123.4; ()"""
     let parsed = Parser.testParser input
     let expected = [
         LiteralExpression ({ literalValue = LiteralValue.Int 12L; data = () })
         LiteralExpression ({ literalValue = LiteralValue.Float 234.5; data = () })
         LiteralExpression ({ literalValue = LiteralValue.String "test"; data = () })
         LiteralExpression ({ literalValue = LiteralValue.Float 123.4; data = () })
+        LiteralExpression ({ literalValue = LiteralValue.Unit; data = () })
     ]
     isOk parsed (fun result -> astMatch expected result)
 
