@@ -37,7 +37,7 @@ let isOk (result: Result<'a, 'b>) (f: 'a -> unit) =
     let ok = match result with
                     | Ok _ -> true
                     | Error _ -> false
-    Assert.True (ok, "Expected: Ok, got: Error")
+    Assert.True (ok, sprintf "Expected: Ok, got: %A" result)
     match result with
         | Ok a -> f a
         | Error e -> () 
