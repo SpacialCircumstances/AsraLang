@@ -163,7 +163,12 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                 te, (st, errs @ es))
             match List.isEmpty block.parameters with
                 | true ->
-                    let body, (_, errors) = List.mapFold foldSubExprs (state, []) block.body
+                    let blockContext = { 
+                        parent = Some state.context
+                        variables = Map.empty
+                        types = Map.empty
+                    }
+                    let body, (_, errors) = List.mapFold foldSubExprs ({ state with context = blockContext}, []) block.body
                     match List.length errors with
                         | 0 ->
                             let body = List.choose id body
