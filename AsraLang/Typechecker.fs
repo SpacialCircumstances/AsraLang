@@ -85,19 +85,27 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                 | None -> None, newState, errors
                 | Some subExpr -> Some (GroupExpression subExpr), newState, errors
         | VariableBindingExpression def ->
+            let addToContext varName tp context = 
+                match Map.tryFind varName context.variables with
+                    | None -> { context with variables = Map.add varName tp context.variables }, []
+                    | Some _ ->
+                        let err = sprintf "%s: Variable %s (type: %O) is already defined in this scope and shadowing is currently not allowed due to naive JS generation" (formatPosition def.varData) varName tp
+                        { context with variables = Map.add varName tp context.variables }, [TypeError err]
             let name, newContext, errors = match def.varName with
                                             | Simple s -> 
                                                 let typed, _, errors = typeExpr state def.value
                                                 match typed with
                                                     | Some te ->
-                                                        Some (s, te), { state.context with variables = Map.add s (getType te) state.context.variables }, errors
+                                                        let ctx, errs2 = addToContext s (getType te) state.context
+                                                        Some (s, te), ctx, errs2 @ errors
                                                     | None ->
                                                         None, state.context, errors
                                             | Annotated at ->
                                                 match resolveType state at.typeName with
                                                     | Some tp ->
-                                                        let ctx = { state.context with variables = Map.add at.varName tp state.context.variables }
-                                                        let typed, _, errors = typeExpr { state with context = ctx } def.value
+                                                        let ctx, errs1 = addToContext at.varName tp state.context
+                                                        let typed, _, errs2 = typeExpr { state with context = ctx } def.value
+                                                        let errors = errs1 @ errs2
                                                         match typed with
                                                             | Some te ->
                                                                 let infT = getType te
@@ -116,7 +124,7 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                 | Some (name, typedExpr) ->
                     let errs = match getType typedExpr with
                                     | Primitive (Native "Unit") ->
-                                        (Warning (sprintf "%s: Attempting to set %s to a unit expresssion, which will result in undefined" (formatPosition def.varData) name)) :: errors
+                                        (Warning (sprintf "%s: Attempting to set %s to a unit expression, which will result in undefined" (formatPosition def.varData) name)) :: errors
                                     | _ -> errors
                     let binding: VariableBinding<AType> = { varName = Simple name; varData = getType typedExpr; value = typedExpr }
                     let newState = { state with context = newContext }
