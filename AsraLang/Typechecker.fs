@@ -175,7 +175,11 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                                                                         | None -> None) parameters
 
                     if (List.length typedParams) = (List.length parameters) then
-                        let blockContext = { state.context with variables = List.fold (fun ctx (p, pt) -> Map.add p pt ctx) state.context.variables typedParams }
+                        let blockContext = { 
+                            parent = Some state.context
+                            variables = List.fold (fun ctx (p, pt) -> Map.add p pt ctx) state.context.variables typedParams
+                            types = Map.empty
+                        }
                         let blockState = { state with context = blockContext }
                         let body, (_, errors) = List.mapFold foldSubExprs (blockState, []) block.body
                         match errors with
