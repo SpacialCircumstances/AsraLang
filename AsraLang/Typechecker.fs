@@ -27,11 +27,20 @@ type State = {
 let formatPosition (pos: FParsec.Position) =
     sprintf "File: %s Line: %i Col: %i" pos.StreamName pos.Line pos.Column
 
+let rec resolveTypeFromContext (ctx: Context) (name: string) =
+    match Map.tryFind name ctx.types with
+        | None ->
+            match ctx.parent with
+                | None -> None
+                | Some parent ->
+                    resolveTypeFromContext parent name
+        | Some t -> Some t
+
 let rec resolveType (state: State) (typeName: TypeDeclaration) = 
     match typeName with
-        | Name typeName -> Map.tryFind typeName state.context.types
+        | Name typeName -> resolveTypeFromContext state.context typeName
         | Parameterized pt ->
-            match Map.tryFind pt.name state.context.types with
+            match resolveTypeFromContext state.context pt.name with
                 | Some (Primitive rbt) ->
                     let resolveTried = List.map (fun tp -> resolveType state tp) pt.genericParameters
                     let resolved = List.choose id resolveTried
