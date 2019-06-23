@@ -16,12 +16,12 @@ type Message =
 //TODO: Use nested context for different scopes
 type Context = {
     parent: Context option
-    context: Map<string, AType>
+    variables: Map<string, AType>
+    types: Map<string, AType>
 }
 
 type State = {
     context: Context
-    types: Map<string, AType>
 }
 
 let formatPosition (pos: FParsec.Position) =
@@ -29,9 +29,9 @@ let formatPosition (pos: FParsec.Position) =
 
 let rec resolveType (state: State) (typeName: TypeDeclaration) = 
     match typeName with
-        | Name typeName -> Map.tryFind typeName state.types
+        | Name typeName -> Map.tryFind typeName state.context.types
         | Parameterized pt ->
-            match Map.tryFind pt.name state.types with
+            match Map.tryFind pt.name state.context.types with
                 | Some (Primitive rbt) ->
                     let resolveTried = List.map (fun tp -> resolveType state tp) pt.genericParameters
                     let resolved = List.choose id resolveTried
@@ -73,13 +73,13 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                                                 let typed, _, errors = typeExpr state def.value
                                                 match typed with
                                                     | Some te ->
-                                                        Some (s, te), { state.context with context = Map.add s (getType te) state.context.context }, errors
+                                                        Some (s, te), { state.context with variables = Map.add s (getType te) state.context.variables }, errors
                                                     | None ->
                                                         None, state.context, errors
                                             | Annotated at ->
                                                 match resolveType state at.typeName with
                                                     | Some tp ->
-                                                        let ctx = { state.context with context = Map.add at.varName tp state.context.context }
+                                                        let ctx = { state.context with variables = Map.add at.varName tp state.context.variables }
                                                         let typed, _, errors = typeExpr { state with context = ctx } def.value
                                                         match typed with
                                                             | Some te ->
@@ -105,7 +105,7 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                     let newState = { state with context = newContext }
                     Some (VariableBindingExpression binding), newState, errs
         | VariableExpression (var, pos) ->
-            let varType = Map.tryFind var state.context.context
+            let varType = Map.tryFind var state.context.variables
             match varType with
                 | Some varType ->
                     Some (VariableExpression (var, varType)), state, []
@@ -158,7 +158,7 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                                                                         | None -> None) parameters
 
                     if (List.length typedParams) = (List.length parameters) then
-                        let blockContext = { state.context with context = List.fold (fun ctx (p, pt) -> Map.add p pt ctx) state.context.context typedParams }
+                        let blockContext = { state.context with variables = List.fold (fun ctx (p, pt) -> Map.add p pt ctx) state.context.variables typedParams }
                         let blockState = { state with context = blockContext }
                         let body, (_, errors) = List.mapFold foldSubExprs (blockState, []) block.body
                         match errors with
@@ -178,14 +178,14 @@ let typecheck (program: UntypedExpression) (externs: Extern list) =
     let init = { 
         context = {
             parent = None
-            context = Map.ofList (List.map (fun ext -> ext.asraName, ext.asraType) externs)
+            variables = Map.ofList (List.map (fun ext -> ext.asraName, ext.asraType) externs)
+            types = Map.ofList [ 
+                "Number", anumber
+                "Bool", abool
+                "Unit", aunit
+                "String", astring
+                "Array", aarray
+            ]
         }
-        types = Map.ofList [ 
-            "Number", anumber
-            "Bool", abool
-            "Unit", aunit
-            "String", astring
-            "Array", aarray
-        ]
     }
     typeExpr init program
