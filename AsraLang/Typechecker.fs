@@ -36,6 +36,15 @@ let rec resolveTypeFromContext (ctx: Context) (name: string) =
                     resolveTypeFromContext parent name
         | Some t -> Some t
 
+let rec resolveVariable (ctx: Context) (name: string) =
+    match Map.tryFind name ctx.variables with
+        | None ->
+            match ctx.parent with
+                | None -> None
+                | Some parent ->
+                    resolveVariable parent name
+        | Some t -> Some t
+
 let rec resolveType (state: State) (typeName: TypeDeclaration) = 
     match typeName with
         | Name typeName -> resolveTypeFromContext state.context typeName
@@ -56,7 +65,6 @@ let rec resolveType (state: State) (typeName: TypeDeclaration) =
                 | Some inp, Some out ->
                     FunctionType { input = inp; output = out } |> Some
                 | _ -> None
-
 
 let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression option * State * Message list =
     match expr with
@@ -114,7 +122,7 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                     let newState = { state with context = newContext }
                     Some (VariableBindingExpression binding), newState, errs
         | VariableExpression (var, pos) ->
-            let varType = Map.tryFind var state.context.variables
+            let varType = resolveVariable state.context var
             match varType with
                 | Some varType ->
                     Some (VariableExpression (var, varType)), state, []
