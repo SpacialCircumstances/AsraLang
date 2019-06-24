@@ -1,2 +1,2 @@
 testArray = newArray 5 [ i: Number -> i ]
-foreach testArray println
+forEach println testArray
