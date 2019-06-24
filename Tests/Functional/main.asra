@@ -4,3 +4,8 @@ compose = [ f1: 'a => 'b, f2: 'b => 'c ->
         f2 (f1 x)
     ] 
 ]
+
+plus2andToString = [ x: Number -> toString (+ x 2) ]
+concatDot = [ s: String -> .. s "." ]
+plus2andDot = compose plus2andToString concatDot
+println (plus2andDot 0)
