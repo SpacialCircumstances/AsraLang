@@ -1,2 +1,3 @@
 testArray = newArray 5 [ i: Number -> i ]
 forEach println testArray
+println (map [ x: Number -> + x 2 ] testArray)

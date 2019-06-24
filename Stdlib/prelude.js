@@ -26,3 +26,4 @@ const newArray = (n) => (creator) => {
     return newarr;
 }
 const forEach = (fun) => (arr) => arr.forEach(fun);
+const map = (fun) => (arr) => arr.map(fun);

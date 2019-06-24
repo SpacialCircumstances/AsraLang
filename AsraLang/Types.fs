@@ -47,6 +47,7 @@ let astring = Primitive (Native "String")
 let aunit = Primitive (Native "Unit")
 let abool = Primitive (Native "Bool")
 let aarray = TypeParameterized { baseType = Native "Array"; typeParameters = [ Generic "a" ] }
+let barray = TypeParameterized { baseType = Native "Array"; typeParameters = [ Generic "b" ] }
 
 type Context = {
     resolvedGenerics: Map<string, AType>
