@@ -67,6 +67,7 @@ and Expression<'data> =
     | VariableExpression of string * 'data
     | BlockExpression of Block<'data>
     | GroupExpression of Expression<'data>
+    | ArrayLiteralExpression of 'data * Expression<'data> list
 
 type UntypedExpression = Expression<Position>
 
@@ -82,3 +83,4 @@ let rec getType (expr: TypedExpression) =
         | VariableExpression (_ , t) -> t
         | BlockExpression block -> block.data
         | GroupExpression expr -> getType expr
+        | ArrayLiteralExpression (t, _) -> t
