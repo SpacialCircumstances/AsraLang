@@ -206,6 +206,31 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                     else
                         let error = sprintf "%s: Function parameter types not specified" (formatPosition block.data)
                         None, state, [TypeError error]
+
+        | ArrayLiteralExpression (data, subexprs) ->
+            match subexprs with
+                | [] ->
+                    Some (ArrayLiteralExpression (AType.Generic "x", [])), state, []
+                | _ ->
+                    let typedSubExprs, errs = List.fold (fun (exprs, errs) untyped -> 
+                                                    let typedOpt, _, newErrs = typeExpr state untyped
+                                                    match typedOpt with
+                                                        | Some t->
+                                                            t :: exprs, newErrs @ errs
+                                                        | None ->
+                                                            exprs, newErrs @ errs) ([], []) subexprs
+                    match List.length typedSubExprs = List.length subexprs with
+                        | true ->
+                            //TODO: Arrays can contain different types, we have to find the compatible one
+                            match List.distinct (List.map getType typedSubExprs) with
+                                | [elementType] ->
+                                    Some (ArrayLiteralExpression (elementType, typedSubExprs)), state, errs
+                                | _ ->
+                                    let error = sprintf "%s: Array literals can only contain a single type" (formatPosition data)
+                                    //TODO: Better error messages
+                                    None, state, TypeError error :: errs
+                        | false ->
+                            None, state, errs
                     
 
 let typecheck (program: UntypedExpression) (externs: Extern list) =
