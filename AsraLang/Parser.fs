@@ -27,7 +27,7 @@ let createParser (data: Parser<'data, unit>) =
     
     let closeParensParser: Parser<unit, unit> = skipChar ')'
 
-    let isSeparator (c: char) = Char.IsWhiteSpace c || c = ';' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':' || c = '#'
+    let isSeparator (c: char) = Char.IsWhiteSpace c || c = ';' || c = '(' || c = ')' || c = '[' || c = ']' || c = ',' || c = ':' || c = '#' || c = '}' || c = '{'
     
     let isIdentifierStart (c: char) = (not (isDigit c)) && not (isSeparator c)
     
@@ -117,7 +117,7 @@ let createParser (data: Parser<'data, unit>) =
 
     let curlyBraceCloseParser = skipChar '}'
 
-    let arrayLiteralParser = data .>>? curlyBraceOpenParser .>>.? (sepBy expressionParser separatorParser) .>> curlyBraceCloseParser |>> ArrayLiteralExpression
+    let arrayLiteralParser = data .>>? curlyBraceOpenParser .>>? (optional separatorParser) .>>.? (sepEndBy expressionParser separatorParser) .>> curlyBraceCloseParser <?> "Array literal" <!> "Array literal parser" |>> ArrayLiteralExpression
 
     let primitiveExpressionParser = 
         choiceL [
