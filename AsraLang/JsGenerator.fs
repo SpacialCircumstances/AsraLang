@@ -44,6 +44,18 @@ let rec writeBlockBody (writeJs: StringBuilder -> TypedExpression -> StringBuild
             writeJs writer last |> ignore
             writer.AppendLine ";"
 
+let rec writeArrayLiteral (writeJs: StringBuilder -> TypedExpression -> StringBuilder) (exprs: TypedExpression list) (writer: StringBuilder) =
+    match List.tryHead exprs with
+        | None ->
+            writer
+        | Some h ->
+            writeJs writer h |> ignore
+            let rest = List.tail exprs
+            match rest with
+                | [] -> writer
+                | _ -> 
+                    writeArrayLiteral writeJs rest (writer.Append(", "))
+
 let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: TypedExpression) =
     match expr with
         | VariableBindingExpression binding ->
@@ -87,6 +99,10 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: TypedExp
                                 | _ -> true
             writeBlockBody (writeJs state) block writer returns |> ignore
             writer.AppendLine "}"
+        | ArrayLiteralExpression (et, subexprs) ->
+            writer.Append "[" |> ignore
+            writeArrayLiteral (writeJs state) subexprs writer |> ignore
+            writer.Append "]"
 
 let generateJs (state: GenerationState) (ast: TypedExpression) =
     let sb = StringBuilder().Append(state.prelude)
