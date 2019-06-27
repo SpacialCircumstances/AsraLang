@@ -325,3 +325,61 @@ let ``Parse parameterized types`` () =
         }
     ]
     isOk parsed (fun result -> astMatch expected result)
+
+[<Fact>]
+let ``Parse array literals`` () =
+    let input = """
+    x = { test; "asdf"; .. "amm" "!" }
+    y = {}
+    z = { {}
+        {}
+        { "test" } }
+    """
+    let parsed = Parser.testParser input
+    let expected = [
+        VariableBindingExpression {
+            varData = ()
+            varName = Simple "x"
+            value = ArrayLiteralExpression ((), [
+                VariableExpression ("test", ())
+                LiteralExpression {
+                    data = ()
+                    literalValue = String "asdf"
+                }
+                FunctionCallExpression {
+                    data = ()
+                    func = VariableExpression ("..", ())
+                    args = [
+                        LiteralExpression {
+                            data = ()
+                            literalValue = String "amm"
+                        }
+                        LiteralExpression {
+                            data = ()
+                            literalValue = String "!"
+                        }
+                    ]
+                }
+            ])
+        }
+        VariableBindingExpression {
+            varData = ()
+            varName = Simple "y"
+            value = ArrayLiteralExpression ((), [])
+        }
+        VariableBindingExpression {
+            varData = ()
+            varName = Simple "z"
+            value = ArrayLiteralExpression ((), [
+                ArrayLiteralExpression ((), [])
+                ArrayLiteralExpression ((), [])
+                ArrayLiteralExpression ((), [
+                    LiteralExpression {
+                        data = ()
+                        literalValue = String "test"
+                    }
+                ])
+            ])
+        }
+    ]
+    isOk parsed (fun result -> astMatch expected result)
