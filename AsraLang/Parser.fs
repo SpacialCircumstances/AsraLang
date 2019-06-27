@@ -113,9 +113,16 @@ let createParser (data: Parser<'data, unit>) =
     
     let blockParser = data .>> skipChar '[' .>>. blockParameterParser .>> spaces .>>. (sepEndBy expressionParser separatorParser) .>> spaces .>> skipChar ']' |>> (fun ((data, parameters), exprs) -> BlockExpression { parameters = Option.defaultValue [] parameters; body = exprs; data = data }) <!> "Block expression parser"
     
+    let curlyBraceOpenParser = skipChar '{'
+
+    let curlyBraceCloseParser = skipChar '}'
+
+    let arrayLiteralParser = data .>>? curlyBraceOpenParser .>>.? (sepBy expressionParser separatorParser) .>> curlyBraceCloseParser |>> ArrayLiteralExpression
+
     let primitiveExpressionParser = 
         choiceL [
             blockParser
+            arrayLiteralParser
             literalExpressionParser
             groupExpressionParser
             variableExpressionParser ] "Primitive expression" <!> "Primitive expression parser"
