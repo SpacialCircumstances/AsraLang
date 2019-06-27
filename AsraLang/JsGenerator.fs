@@ -101,7 +101,7 @@ let rec writeJs (state: GenerationState) (writer: StringBuilder) (expr: TypedExp
             writer.AppendLine "}"
         | ArrayLiteralExpression (et, subexprs) ->
             writer.Append "[" |> ignore
-            writeArrayLiteral (writeJs state) subexprs writer |> ignore
+            writeArrayLiteral (writeJs state) (List.rev subexprs) writer |> ignore
             writer.Append "]"
 
 let generateJs (state: GenerationState) (ast: TypedExpression) =
