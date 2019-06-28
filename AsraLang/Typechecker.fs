@@ -210,7 +210,7 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
         | ArrayLiteralExpression (data, subexprs) ->
             match subexprs with
                 | [] ->
-                    Some (ArrayLiteralExpression (AType.Generic "x", [])), state, []
+                    Some (ArrayLiteralExpression (tArray "x", [])), state, []
                 | _ ->
                     let typedSubExprs, errs = List.fold (fun (exprs, errs) untyped -> 
                                                     let typedOpt, _, newErrs = typeExpr state untyped
@@ -221,13 +221,13 @@ let rec typeExpr (state: State) (expr: UntypedExpression): TypedExpression optio
                                                             exprs, newErrs @ errs) ([], []) subexprs
                     match List.length typedSubExprs = List.length subexprs with
                         | true ->
-                            //TODO: Arrays can contain different types, we have to find the compatible one
-                            match List.distinct (List.map getType typedSubExprs) with
-                                | [elementType] ->
-                                    Some (ArrayLiteralExpression (elementType, typedSubExprs)), state, errs
-                                | _ ->
-                                    let error = sprintf "%s: Array literals can only contain a single type" (formatPosition data)
-                                    //TODO: Better error messages
+                            let arrayConstructionType = genFunType (List.map (fun _ -> AType.Generic "element") typedSubExprs) (tArray "element")
+                            let arrayType, _ = returnType arrayConstructionType (List.map getType typedSubExprs)
+                            match arrayType with
+                                | Ok at ->
+                                    Some (ArrayLiteralExpression (at, typedSubExprs)), state, errs
+                                | Error err ->
+                                    let error = sprintf "%s: Array literal: %s" (formatPosition data) err
                                     None, state, TypeError error :: errs
                         | false ->
                             None, state, errs
