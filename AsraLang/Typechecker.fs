@@ -248,7 +248,45 @@ module Simple =
                 ]
             }
         }
-        typeExpr init program
+        let typedAst, _, msgs = typeExpr init program
+        typedAst, msgs
                         
+module Improved =
+    type TypeRef = string
+
+    type Context = {
+        parent: Context option
+        varTypes: Map<string, TypeRef>
+        typeBindings: Map<TypeRef, AType>
+        typeNameCount: int
+    }
+
+    let bindTypeRef ctx tref typ = { ctx with typeBindings = Map.add tref typ ctx.typeBindings }
+
+    let newTypeRef ctx = (sprintf "t%i" ctx.typeNameCount), { ctx with typeNameCount = ctx.typeNameCount + 1 }
+
+    let typeExpr (expr: UntypedExpression) (ctx: Context) =
+        match expr with
+            | LiteralExpression litExpr ->
+                let tr, newCtx = newTypeRef ctx
+                let litType = match litExpr.literalValue with
+                                            | LiteralValue.String _ -> astring
+                                            | LiteralValue.Int _ -> anumber 
+                                            | LiteralValue.Float _ -> anumber
+                                            | LiteralValue.Unit -> aunit
+                let ctxWithType = bindTypeRef newCtx tr litType
+                Some (LiteralExpression { data = tr; literalValue = litExpr.literalValue }), ctxWithType, []
+
+            | _ -> None, ctx, []
+
+    let typecheck (program: UntypedExpression) (externs: Extern list) =
+        let ctx = {
+            parent = None
+            varTypes = Map.empty
+            typeBindings = Map.empty
+            typeNameCount = 0
+        }
+        let typed, _, errs = typeExpr program ctx
+        typed, errs
 
 let typecheck (program: UntypedExpression) (externs: Extern list) = Simple.typecheck program externs
