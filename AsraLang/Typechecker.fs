@@ -274,6 +274,8 @@ module Improved =
         state := { state.contents with typeNameCount = tnc + 1 }
         refn
 
+    let resolveVar name ctx = Map.tryFind name ctx.varTypes
+
     let resolveRef tr state = Map.tryFind tr state.typeBindings
 
     let declaredType decl ctx: AType option = None
@@ -309,7 +311,13 @@ module Improved =
                                 Some (VariableBindingExpression { value = subExpr; varName = bindExpr.varName; varData = valueTypeRef }), newCtx, errs
                             | _, None -> 
                                 Some (VariableBindingExpression { value = subExpr; varName = bindExpr.varName; varData = valueTypeRef }), newCtx, errs
-
+            | VariableExpression (name, data) ->
+                match resolveVar name ctx with
+                    | None ->
+                        let msg = sprintf "Variable %s does not exist" name |> TypeError
+                        None, ctx, [msg]
+                    | Some tr ->
+                        Some (VariableExpression (name, tr)), ctx, []
             | _ -> None, ctx, []
 
     let typecheck (program: UntypedExpression) (externs: Extern list) =
