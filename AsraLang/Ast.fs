@@ -84,3 +84,13 @@ let rec getData (expr: Expression<'a>) =
         | BlockExpression block -> block.data
         | GroupExpression expr -> getData expr
         | ArrayLiteralExpression (t, _) -> t
+
+let rec map (mapper: 'a -> 'b) (expr: Expression<'a>) = 
+    match expr with
+        | LiteralExpression lit -> LiteralExpression { literalValue = lit.literalValue; data = mapper lit.data }
+        | VariableBindingExpression bind -> VariableBindingExpression { varName = bind.varName; value = map mapper bind.value; varData = mapper bind.varData }
+        | FunctionCallExpression fc -> FunctionCallExpression { func = map mapper fc.func; args = List.map (map mapper) fc.args; data = mapper fc.data }
+        | VariableExpression (n, t) -> VariableExpression (n, mapper t)
+        | BlockExpression block -> BlockExpression { data = mapper block.data; parameters = block.parameters; body = List.map (map mapper) block.body }
+        | GroupExpression expr -> map mapper expr
+        | ArrayLiteralExpression (d, el) -> ArrayLiteralExpression (mapper d, List.map (map mapper) el)
