@@ -75,12 +75,12 @@ type UntypedTestExpression = Expression<unit>
 
 type TypedExpression = Expression<Types.AType>
 
-let rec getType (expr: TypedExpression) =
+let rec getData (expr: Expression<'a>) =
     match expr with
         | LiteralExpression lit -> lit.data
         | VariableBindingExpression bind -> bind.varData
         | FunctionCallExpression fc -> fc.data
         | VariableExpression (_ , t) -> t
         | BlockExpression block -> block.data
-        | GroupExpression expr -> getType expr
+        | GroupExpression expr -> getData expr
         | ArrayLiteralExpression (t, _) -> t

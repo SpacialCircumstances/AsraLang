@@ -98,7 +98,7 @@ module Simple =
                                                     let typed, _, errors = typeExpr state def.value
                                                     match typed with
                                                         | Some te ->
-                                                            let ctx, errs2 = addToContext s (getType te) state.context
+                                                            let ctx, errs2 = addToContext s (getData te) state.context
                                                             Some (s, te), ctx, errs2 @ errors
                                                         | None ->
                                                             None, state.context, errors
@@ -110,7 +110,7 @@ module Simple =
                                                             let errors = errs1 @ errs2
                                                             match typed with
                                                                 | Some te ->
-                                                                    let infT = getType te
+                                                                    let infT = getData te
                                                                     match infT = tp with
                                                                         | true ->
                                                                             Some (at.varName, te), ctx, errors
@@ -124,11 +124,11 @@ module Simple =
                     | None ->
                         None, state, errors
                     | Some (name, typedExpr) ->
-                        let errs = match getType typedExpr with
+                        let errs = match getData typedExpr with
                                         | Primitive (Native "Unit") ->
                                             (Warning (sprintf "%s: Attempting to set %s to a unit expression, which will result in undefined" (formatPosition def.varData) name)) :: errors
                                         | _ -> errors
-                        let binding: VariableBinding<AType> = { varName = Simple name; varData = getType typedExpr; value = typedExpr }
+                        let binding: VariableBinding<AType> = { varName = Simple name; varData = getData typedExpr; value = typedExpr }
                         let newState = { state with context = newContext }
                         Some (VariableBindingExpression binding), newState, errs
             | VariableExpression (var, pos) ->
@@ -149,8 +149,8 @@ module Simple =
                             let args = List.choose id args //No errors - we can unwrap the arguments
                             match funExp with
                                 | Some funExp ->
-                                    let funType = getType funExp
-                                    match returnType funType (List.map getType args) |> fst with
+                                    let funType = getData funExp
+                                    match returnType funType (List.map getData args) |> fst with
                                         | Ok retType ->
                                             let call: FunctionCall<AType> = { func = funExp; args = args; data = retType }
                                             Some (FunctionCallExpression call), state, []
@@ -174,7 +174,7 @@ module Simple =
                         match List.length errors with
                             | 0 ->
                                 let body = List.choose id body
-                                let rt = getType (List.last body)
+                                let rt = getData (List.last body)
                                 let bt = genFunType [] rt
                                 let tblock: Block<AType> = { parameters = []; body = body; data = bt }
                                 Some(BlockExpression tblock), state, errors
@@ -200,7 +200,7 @@ module Simple =
                             match errors with
                                 | [] ->
                                     let body = List.choose id body
-                                    let rt = getType (List.last body)
+                                    let rt = getData (List.last body)
                                     let bt = genFunType (List.map snd typedParams) rt
                                     let tblock: Block<AType> = { parameters = (List.map (fst >> Simple) typedParams); body = body; data = bt }
                                     Some (BlockExpression tblock), state, errors
@@ -224,7 +224,7 @@ module Simple =
                         match List.length typedSubExprs = List.length subexprs with
                             | true ->
                                 let arrayConstructionType = genFunType (List.map (fun _ -> AType.Generic "element") typedSubExprs) (tArray "element")
-                                let arrayType, _ = returnType arrayConstructionType (List.map getType typedSubExprs)
+                                let arrayType, _ = returnType arrayConstructionType (List.map getData typedSubExprs)
                                 match arrayType with
                                     | Ok at ->
                                         Some (ArrayLiteralExpression (at, typedSubExprs)), state, errs
