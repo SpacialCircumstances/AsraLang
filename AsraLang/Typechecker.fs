@@ -318,6 +318,7 @@ module Improved =
                         None, ctx, [msg]
                     | Some tr ->
                         Some (VariableExpression (name, tr)), ctx, []
+            | GroupExpression expr -> typeExpr expr ctx state            
             | _ -> None, ctx, []
 
     let typecheck (program: UntypedExpression) (externs: Extern list) =
