@@ -257,37 +257,46 @@ module Improved =
     type Context = {
         parent: Context option
         varTypes: Map<string, TypeRef>
+    }
+
+    type State = {
         typeBindings: Map<TypeRef, AType>
         typeNameCount: int
     }
 
-    let bindTypeRef ctx tref typ = { ctx with typeBindings = Map.add tref typ ctx.typeBindings }
+    let bindTypeRef (state: State ref) tref typ = 
+        state := { state.contents with typeBindings = Map.add tref typ state.contents.typeBindings }
+        ()
 
-    let newTypeRef ctx = (sprintf "t%i" ctx.typeNameCount), { ctx with typeNameCount = ctx.typeNameCount + 1 }
+    let newTypeRef (state: State ref) = 
+        let tnc = state.contents.typeNameCount
+        let refn = (sprintf "t%i" tnc)
+        state := { state.contents with typeNameCount = tnc + 1 }
+        refn
 
-    let resolveRef tr ctx = Map.tryFind tr ctx.typeBindings
+    let resolveRef tr state = Map.tryFind tr state.typeBindings
 
     let declaredType decl ctx: AType option = None
 
-    let rec typeExpr (expr: UntypedExpression) (ctx: Context) =
+    let rec typeExpr (expr: UntypedExpression) (ctx: Context) (state: State ref) =
         match expr with
             | LiteralExpression litExpr ->
-                let tr, newCtx = newTypeRef ctx
+                let tr = newTypeRef state
                 let litType = match litExpr.literalValue with
                                             | LiteralValue.String _ -> astring
                                             | LiteralValue.Int _ -> anumber 
                                             | LiteralValue.Float _ -> anumber
                                             | LiteralValue.Unit -> aunit
-                let ctxWithType = bindTypeRef newCtx tr litType
-                Some (LiteralExpression { data = tr; literalValue = litExpr.literalValue }), ctxWithType, []
+                bindTypeRef state tr litType
+                Some (LiteralExpression { data = tr; literalValue = litExpr.literalValue }), ctx, []
             | VariableBindingExpression bindExpr ->
-                let subExpr, newCtx, errs = typeExpr bindExpr.value ctx
+                let subExpr, newCtx, errs = typeExpr bindExpr.value ctx state
                 match subExpr with
                     | None ->
                         None, newCtx, errs
                     | Some subExpr ->
                         let valueTypeRef = getData subExpr
-                        match resolveRef valueTypeRef newCtx, declaredType bindExpr.varName newCtx with
+                        match resolveRef valueTypeRef state.contents, declaredType bindExpr.varName newCtx with
                             | Some refT, Some tp ->
                                 match refT = tp with
                                     | true ->
@@ -296,7 +305,7 @@ module Improved =
                                         let msg = sprintf "Expected annotated type: %O, but got %O instead" tp refT |> TypeError
                                         None, newCtx, msg :: errs
                             | None, Some tp ->
-                                let newCtx = bindTypeRef newCtx valueTypeRef tp
+                                bindTypeRef state valueTypeRef tp
                                 Some (VariableBindingExpression { value = subExpr; varName = bindExpr.varName; varData = valueTypeRef }), newCtx, errs
                             | _, None -> 
                                 Some (VariableBindingExpression { value = subExpr; varName = bindExpr.varName; varData = valueTypeRef }), newCtx, errs
@@ -307,10 +316,13 @@ module Improved =
         let ctx = {
             parent = None
             varTypes = Map.empty
+        }
+        let state = ref {
             typeBindings = Map.empty
             typeNameCount = 0
         }
-        let typed, _, errs = typeExpr program ctx
+        let typed, _, errs = typeExpr program ctx state
+        //TODO: Use state to convert typeRefs into actual types
         typed, errs
 
 let typecheck (program: UntypedExpression) (externs: Extern list) = Simple.typecheck program externs
