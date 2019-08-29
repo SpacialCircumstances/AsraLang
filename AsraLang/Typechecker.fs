@@ -265,7 +265,11 @@ module Improved =
 
     let newTypeRef ctx = (sprintf "t%i" ctx.typeNameCount), { ctx with typeNameCount = ctx.typeNameCount + 1 }
 
-    let typeExpr (expr: UntypedExpression) (ctx: Context) =
+    let resolveRef tr ctx = Map.tryFind tr ctx.typeBindings
+
+    let declaredType decl ctx: AType option = None
+
+    let rec typeExpr (expr: UntypedExpression) (ctx: Context) =
         match expr with
             | LiteralExpression litExpr ->
                 let tr, newCtx = newTypeRef ctx
@@ -276,6 +280,26 @@ module Improved =
                                             | LiteralValue.Unit -> aunit
                 let ctxWithType = bindTypeRef newCtx tr litType
                 Some (LiteralExpression { data = tr; literalValue = litExpr.literalValue }), ctxWithType, []
+            | VariableBindingExpression bindExpr ->
+                let subExpr, newCtx, errs = typeExpr bindExpr.value ctx
+                match subExpr with
+                    | None ->
+                        None, newCtx, errs
+                    | Some subExpr ->
+                        let valueTypeRef = getData subExpr
+                        match resolveRef valueTypeRef newCtx, declaredType bindExpr.varName newCtx with
+                            | Some refT, Some tp ->
+                                match refT = tp with
+                                    | true ->
+                                        Some (VariableBindingExpression { value = subExpr; varName = bindExpr.varName; varData = valueTypeRef }), newCtx, errs
+                                    | false ->
+                                        let msg = sprintf "Expected annotated type: %O, but got %O instead" tp refT |> TypeError
+                                        None, newCtx, msg :: errs
+                            | None, Some tp ->
+                                let newCtx = bindTypeRef newCtx valueTypeRef tp
+                                Some (VariableBindingExpression { value = subExpr; varName = bindExpr.varName; varData = valueTypeRef }), newCtx, errs
+                            | _, None -> 
+                                Some (VariableBindingExpression { value = subExpr; varName = bindExpr.varName; varData = valueTypeRef }), newCtx, errs
 
             | _ -> None, ctx, []
 
