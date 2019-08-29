@@ -322,14 +322,21 @@ module Improved =
             | _ -> None, ctx, []
 
     let typecheck (program: UntypedExpression) (externs: Extern list) =
-        let ctx = {
-            parent = None
-            varTypes = Map.empty
-        }
         let state = ref {
             typeBindings = Map.empty
             typeNameCount = 0
         }
+        let types = externs |>
+                                List.map (fun ext -> 
+                                    let tr = newTypeRef state
+                                    bindTypeRef state tr ext.asraType
+                                    ext.asraName, tr)
+                            |> Map.ofList
+        let ctx = {
+            parent = None
+            varTypes = types
+        }
+        
         let typed, _, errs = typeExpr program ctx state
         //TODO: Use state to convert typeRefs into actual types
         typed, errs
