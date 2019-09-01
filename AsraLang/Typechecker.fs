@@ -252,7 +252,7 @@ module Simple =
         typedAst, msgs
                         
 module Improved =
-    type TypeRef = string
+    type TypeRef = TRef of string
 
     type Context = {
         parent: Context option
@@ -271,7 +271,7 @@ module Improved =
 
     let newTypeRef (state: State ref) = 
         let tnc = state.contents.typeNameCount
-        let refn = (sprintf "t%i" tnc)
+        let refn = TRef (sprintf "t%i" tnc)
         state := { state.contents with typeNameCount = tnc + 1 }
         refn
 
