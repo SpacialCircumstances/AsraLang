@@ -257,6 +257,7 @@ module Improved =
     type Context = {
         parent: Context option
         varTypes: Map<string, TypeRef>
+        typeNames: Map<string, AType>
     }
 
     type State = {
@@ -278,7 +279,11 @@ module Improved =
 
     let resolveRef tr state = Map.tryFind tr state.typeBindings
 
-    let declaredType decl ctx: AType option = None
+    let typeFromDeclaration ctx tdecl = 
+        match tdecl with
+            | Name name ->
+                Map.tryFind name ctx.typeNames
+            | _ -> invalidOp "Not implemented"
 
     let rec typeExpr (expr: UntypedExpression) (ctx: Context) (state: State ref) =
         match expr with
@@ -298,7 +303,10 @@ module Improved =
                         None, newCtx, errs
                     | Some subExpr ->
                         let valueTypeRef = getData subExpr
-                        match resolveRef valueTypeRef state.contents, declaredType bindExpr.varName newCtx with
+                        let declType = match bindExpr.varName with
+                                            | Simple _ -> None
+                                            | Annotated ta -> typeFromDeclaration newCtx ta.typeName
+                        match resolveRef valueTypeRef state.contents, declType with
                             | Some refT, Some tp ->
                                 match refT = tp with
                                     | true ->
@@ -318,7 +326,60 @@ module Improved =
                         None, ctx, [msg]
                     | Some tr ->
                         Some (VariableExpression (name, tr)), ctx, []
-            | GroupExpression expr -> typeExpr expr ctx state            
+            | GroupExpression expr -> typeExpr expr ctx state
+            | BlockExpression block ->
+                let foldSubExprs (context, exprs, errors) expr = 
+                    match typeExpr expr context state with
+                        | None, ctx, errs -> (ctx, exprs, errs @ errors)
+                        | Some tExpr, ctx, errs -> (ctx, tExpr :: exprs, errs @ errors)
+                let parameters, errors = List.fold (fun (parameters, errors) par -> 
+                    let tref = newTypeRef state
+                    match par with
+                        | Annotated ta ->
+                            match typeFromDeclaration ctx ta.typeName with
+                                | None ->
+                                    (parameters, (sprintf "Error resolving type: %A" ta.typeName |> TypeError) :: errors)
+                                | Some tp ->
+                                    do bindTypeRef state tref tp
+                                    ((ta.varName, tref) :: parameters, errors)
+                        | Simple name ->
+                            ((name, tref) :: parameters, errors)) ([], []) block.parameters
+                let blockBodyContext = {
+                    parent = Some ctx
+                    varTypes = Map.ofList parameters
+                    typeNames = Map.empty
+                }
+                let newBlockBodyContext, exprs, bodyErrors = List.fold foldSubExprs (blockBodyContext, [], []) block.body
+                match (List.length exprs) = (List.length block.body) with
+                    | true ->
+                        let tref = newTypeRef state
+                        //TODO: Infer types later
+                        let parameterTypes, parErrors, paramsOk = 
+                            List.fold (fun (pts, perrs, ok) parameter ->
+                                match resolveRef (snd parameter) !state with
+                                    | None ->
+                                        let err = sprintf "Cannot infer type for parameter %s" (fst parameter) |> TypeError
+                                        (pts, err :: perrs, false)
+                                    | Some tp ->
+                                        (tp :: pts, perrs, ok)) ([], [], true) parameters
+                        match paramsOk with
+                            | true ->
+                                let returnType = match exprs |> List.tryLast |> Option.map getData |> Option.map (fun tr -> resolveRef tr !state) |> Option.flatten with
+                                                    | Some rt -> rt
+                                                    | None -> aunit
+                                let blockType = genFunType parameterTypes returnType
+                                let tref = newTypeRef state
+                                do bindTypeRef state tref blockType
+                                let tblock = {
+                                    body = exprs
+                                    parameters = block.parameters //TODO: Annotated?
+                                    data = tref
+                                }
+                                Some (BlockExpression tblock), ctx, parErrors @ errors @ bodyErrors
+                            | false ->
+                                None, ctx, parErrors @ errors @ bodyErrors
+                    | false ->
+                        None, ctx, errors @ bodyErrors
             | _ -> None, ctx, []
 
     let typecheck (program: UntypedExpression) (externs: Extern list) =
@@ -335,6 +396,7 @@ module Improved =
         let ctx = {
             parent = None
             varTypes = types
+            typeNames = Map.empty
         }
         
         let typed, _, errs = typeExpr program ctx state
