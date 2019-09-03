@@ -380,6 +380,42 @@ module Improved =
                                 None, ctx, parErrors @ errors @ bodyErrors
                     | false ->
                         None, ctx, errors @ bodyErrors
+            | FunctionCallExpression funCall ->
+                let foldArgs (context, exprs, errors) expr = 
+                    match typeExpr expr context state with
+                        | None, ctx, errs -> (ctx, exprs, errs @ errors)
+                        | Some tExpr, ctx, errs -> (ctx, tExpr :: exprs, errs @ errors)
+
+                let applyFunction (functionType: AType) (args: TypeRef list) (state: State ref) =
+                    match functionType with
+                        | FunctionType ft ->
+                            match List.tryHead args with
+                                | None -> Ok ft.output
+                                | Some tr ->
+                                    Ok ft.output
+                        | _ -> Error "Cannot apply function" //TODO
+
+                match typeExpr funCall.func ctx state with
+                    | Some func, ctx, errs ->
+                        let funcT = resolveRef (getData func) !state //TODO: Infer function type here?
+                        let ctx, args, argErrors = List.fold foldArgs (ctx, [], []) funCall.args
+                        match funcT, (List.length args) = (List.length funCall.args) with
+                            | Some ft, true ->
+                                match applyFunction ft (List.map getData args) state with
+                                    | Ok resultType ->
+                                        let tref = newTypeRef state
+                                        do bindTypeRef state tref resultType
+                                        let fc = {
+                                            func = func
+                                            args = args
+                                            data = tref
+                                        }
+                                        Some (FunctionCallExpression fc), ctx, argErrors @ errs
+                                    | Error e ->
+                                        let err = TypeError e
+                                        None, ctx, err :: argErrors @ errs
+                            | _ -> None, ctx, argErrors @ errs
+                    | None, _, errs -> None, ctx, errs
             | _ -> None, ctx, []
 
     let typecheck (program: UntypedExpression) (externs: Extern list) =
